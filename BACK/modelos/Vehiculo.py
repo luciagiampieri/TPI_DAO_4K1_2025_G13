@@ -11,6 +11,10 @@ class Vehiculo:
         self.costo_diario = costo_diario
 
 
+    def setKilometraje(self, km):
+        self.kilometraje = km
+
+
     def __str__(self):
         return f"Vehiculo ID: {self.id_vehiculo}, Caracteristicas: {self.caracteristica_vehiculo}, Estado: {self.estado}, Patente: {self.patente}, Kilometraje: {self.kilometraje}, Costo Diario: {self.costo_diario}"
         

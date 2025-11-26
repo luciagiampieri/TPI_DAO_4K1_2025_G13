@@ -1,0 +1,55 @@
+# --- GENERAL & OS ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+
+# --- PYTHON (BACKEND & FLASK) ---
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments (Nombres comunes)
+venv/
+env/
+.env
+.venv/
+
+# Flask
+instance/
+.webassets-cache
+
+# Variables de entorno (Secretos)
+.env
+.flaskenv
+
+# --- BASE DE DATOS (SQLITE) ---
+# Ignorar bases de datos en general para no subir datos de prueba masivos
+*.sqlite3
+*.sqlite
+
+
+# --- REACT (FRONTEND) ---
+# Dependencias (NUNCA subir esto, pesa demasiado)
+node_modules/
+/node_modules
+
+# Build de producción
+build/
+dist/
+
+# Archivos de entorno locales (React)
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs de npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+*.zip
+*.tar.gz

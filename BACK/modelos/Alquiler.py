@@ -1,7 +1,9 @@
+from Estado import Estado
+from Vehiculo import Vehiculo
 
 class Alquiler:
 
-    def __init__(self, id_alquiler, vehiculo, empleado, cliente, fecha_inicio, fecha_fin, costo_total, estado):
+    def __init__(self, id_alquiler, vehiculo : Vehiculo, empleado, cliente, fecha_inicio, fecha_fin, costo_total, estado):
         self.id_alquiler = id_alquiler
         self.vehiculo = vehiculo
         self.empleado = empleado
@@ -26,7 +28,11 @@ class Alquiler:
         from datetime import datetime
         self.fecha_fin = datetime.now()
         self.calcular_costo()
-        self.estado = Estado.Estado(8, "Finalizado")  # Asumiendo 8 es el ID para 'Finalizado'
+        self.estado = Estado(8, "Finalizado")  # Asumiendo 8 es el ID para 'Finalizado'
+        # TODO pasar esto a patron state 
+
+        # Actualizar el kilometraje del vehículo
+        self.vehiculo.setKilometraje(km_final)
 
     
     def __str__(self):
