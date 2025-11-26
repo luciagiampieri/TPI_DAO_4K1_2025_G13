@@ -8,6 +8,7 @@ class TipoIncidenteManager:
     def __init__(self):
         self.db_connection = DBConnection()
 
+
     def __row_to_tipo_incidente(self, row):
         """Mapea un registro (fila de la BD) a un objeto TipoIncidente."""
         if row is None:
@@ -17,6 +18,7 @@ class TipoIncidenteManager:
             id_tipo_incidente=row['ID_TIPO_INCIDENTE'],
             tipo_incidente=row['TX_INCIDENTE'] # Usamos TX_INCIDENTE
         )
+
 
     # --- Método LEER (Consulta por ID) ---
     def obtener_por_id(self, id_tipo_incidente):
@@ -30,6 +32,7 @@ class TipoIncidenteManager:
         finally:
             conn.close()
             
+    # --- Método LEER TODO (Listado) ---        
     def listar_todos(self):
         """Retorna una lista de todos los objetos TipoIncidente."""
         conn = self.db_connection.get_connection()

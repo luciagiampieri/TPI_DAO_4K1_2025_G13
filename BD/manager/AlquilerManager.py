@@ -17,6 +17,7 @@ class AlquilerManager:
         self.empleado_manager = EmpleadoManager()
         self.estado_manager = EstadoManager()
 
+
     def __row_to_alquiler(self, row):
         """Mapea un registro a un objeto Alquiler, resolviendo dependencias."""
         if row is None:
@@ -58,13 +59,13 @@ class AlquilerManager:
             cursor.execute("""
                 INSERT INTO ALQUILER (ID_VEHICULO, ID_EMPLEADO, ID_CLIENTE, FEC_INICIO, FEC_FIN, COSTO_TOTAL, ID_ESTADO) 
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (alquiler.vehiculo.id_vehiculo, 
-                  alquiler.empleado.id_empleado, 
-                  alquiler.cliente.id_cliente, 
-                  fec_inicio_str, 
-                  fec_fin_str, 
-                  alquiler.costo_total, 
-                  alquiler.estado.id_estado)
+                """, (alquiler.vehiculo.id_vehiculo, 
+                    alquiler.empleado.id_empleado, 
+                    alquiler.cliente.id_cliente, 
+                    fec_inicio_str, 
+                    fec_fin_str, 
+                    alquiler.costo_total, 
+                    alquiler.estado.id_estado)
             )
             
             alquiler.id_alquiler = cursor.lastrowid
@@ -77,6 +78,7 @@ class AlquilerManager:
             return None
         finally:
             conn.close()
+
 
     # --- 2. Método LEER (Consulta por ID) ---
     def obtener_por_id(self, id_alquiler):
@@ -95,7 +97,8 @@ class AlquilerManager:
             return None
         finally:
             conn.close()
-            
+    
+
     # --- 3. Método LEER TODO (Listado) ---
     def listar_todos(self):
         """Retorna una lista de todos los objetos Alquiler."""
@@ -111,6 +114,7 @@ class AlquilerManager:
             return []
         finally:
             conn.close()
+
 
     # --- 4. Método ACTUALIZAR (Modificación) ---
     def actualizar(self, alquiler):
@@ -132,8 +136,8 @@ class AlquilerManager:
                     FEC_INICIO = ?, FEC_FIN = ?, COSTO_TOTAL = ?, ID_ESTADO = ?
                 WHERE ID_ALQUILER = ?
             """, (alquiler.vehiculo.id_vehiculo, alquiler.empleado.id_empleado, alquiler.cliente.id_cliente, 
-                  fec_inicio_str, fec_fin_str, alquiler.costo_total, alquiler.estado.id_estado, 
-                  alquiler.id_alquiler))
+                fec_inicio_str, fec_fin_str, alquiler.costo_total, alquiler.estado.id_estado, 
+                alquiler.id_alquiler))
             
             conn.commit()
             return cursor.rowcount > 0
@@ -144,19 +148,49 @@ class AlquilerManager:
         finally:
             conn.close()
 
+
     # --- 5. Método BORRAR (Baja) ---
-    def eliminar(self, id_alquiler):
-        """Elimina un alquiler por su ID."""
+    def cancelar(self, alquiler):
+        """Actualizar a estado cancelado un alquiler en la BD."""
+        if not alquiler.id_alquiler:
+            print("Error: No se puede actualizar un alquiler sin ID.")
+            return False
+            
         conn = self.db_connection.get_connection()
         cursor = conn.cursor()
         
         try:
-            cursor.execute("DELETE FROM ALQUILER WHERE ID_ALQUILER = ?", (id_alquiler,))
+            fec_inicio_str = alquiler.fecha_inicio.strftime('%Y-%m-%d %H:%M:%S')
+            fec_fin_str = alquiler.fecha_fin.strftime('%Y-%m-%d %H:%M:%S')
+        
+        # PONER EL ID DE ESTADO 'CANCELADO' SEGÚN CORRESPONDA
+            # Asumiendo que el ID del estado 'cancelado' es 3
+            cursor.execute("""
+                UPDATE ALQUILER SET ID_ESTADO = ?, FEC_INICIO = ?, FEC_FIN = ? WHERE ID_ALQUILER = ?
+            """, (3, fec_inicio_str, fec_fin_str, alquiler.id_alquiler))
+            
             conn.commit()
             return cursor.rowcount > 0
         except sqlite3.Error as e:
-            print(f"Error al eliminar alquiler: {e}")
+            print(f"Error al cancelar el alquiler: {e}")
             conn.rollback()
             return False
+        finally:
+            conn.close()
+
+
+    # --- Metodo listar alquileres por clientes
+    def listar_por_cliente(self, id_cliente):
+        """Retorna una lista de todos los objetos Alquiler de un cliente."""
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("SELECT * FROM ALQUILER WHERE ID_CLIENTE = ?", (id_cliente,))
+            alquileres = [self.__row_to_alquiler(row) for row in cursor.fetchall()]
+            return alquileres
+        except sqlite3.Error as e:
+            print(f"Error al listar alquileres por cliente: {e}")
+            return []
         finally:
             conn.close()

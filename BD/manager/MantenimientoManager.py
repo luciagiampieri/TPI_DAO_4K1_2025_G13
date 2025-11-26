@@ -13,6 +13,7 @@ class MantenimientoManager:
         self.vehiculo_manager = VehiculoManager()
         self.tipo_mantenimiento_manager = TipoMantenimientoManager()
 
+
     def __row_to_mantenimiento(self, row):
         """Mapea un registro a un objeto Mantenimiento, resolviendo dependencias."""
         if row is None:
@@ -37,6 +38,7 @@ class MantenimientoManager:
             observacion=row['OBSERVACION']
         )
 
+
     # --- 1. Método CREAR (Alta) ---
     def guardar(self, mantenimiento):
         """Inserta un nuevo registro de mantenimiento en la BD."""
@@ -51,12 +53,12 @@ class MantenimientoManager:
             cursor.execute("""
                 INSERT INTO MANTENIMIENTO (ID_VEHICULO, ID_TIPO_MANTENIMIENTO, FEC_INICIO, FEC_FIN, COSTO, OBSERVACION) 
                 VALUES (?, ?, ?, ?, ?, ?)
-            """, (mantenimiento.vehiculo.id_vehiculo, 
-                  mantenimiento.tipo_mantenimiento.id_tipo_mantenimiento, 
-                  fec_inicio_str, 
-                  fec_fin_str, 
-                  mantenimiento.costo, 
-                  mantenimiento.observacion))
+                """, (mantenimiento.vehiculo.id_vehiculo, 
+                    mantenimiento.tipo_mantenimiento.id_tipo_mantenimiento, 
+                    fec_inicio_str, 
+                    fec_fin_str, 
+                    mantenimiento.costo, 
+                    mantenimiento.observacion))
             
             mantenimiento.id_mantenimiento = cursor.lastrowid
             conn.commit()
@@ -67,6 +69,7 @@ class MantenimientoManager:
             return None
         finally:
             conn.close()
+
 
     # --- 2. Método LEER (Consulta por ID) ---
     def obtener_por_id(self, id_mantenimiento):
@@ -79,6 +82,7 @@ class MantenimientoManager:
             return self.__row_to_mantenimiento(row)
         finally:
             conn.close()
+
 
     # Además, se necesitaría un método para finalizar un mantenimiento (UPDATE de FEC_FIN y COSTO)
     def finalizar_mantenimiento(self, id_mantenimiento, fecha_fin, costo):

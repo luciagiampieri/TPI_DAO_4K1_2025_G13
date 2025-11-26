@@ -61,5 +61,66 @@ class EmpleadoManager:
             return None
         finally:
             conn.close()
+        
+
+    # -- 3. Método LEER TODO (Listado) ---
+    def listar_todos(self):
+        """Retorna una lista de todos los objetos Empleado."""
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("SELECT * FROM EMPLEADO")
             
-    # También necesitarías los métodos listar_todos, actualizar y eliminar.
+            empleados = [self.__row_to_empleado(row) for row in cursor.fetchall()]
+            return empleados
+        except sqlite3.Error as e:
+            print(f"Error al listar empleados: {e}")
+            return []
+        finally:
+            conn.close()
+
+
+    # --- 4. Método ACTUALIZAR --- (Modificación) ---
+    def actualizar(self, empleado):
+        """Actualiza los datos de un empleado existente en la BD."""
+        if not empleado.id_empleado:
+            print("Error: No se puede actualizar un empleado sin ID.")
+            return False
+            
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("""
+                UPDATE EMPLEADO 
+                SET NOMBRE = ?, DNI = ?, MAIL = ? 
+                WHERE ID_EMPLEADO = ?
+            """, (empleado.nombre, empleado.dni, empleado.mail, empleado.id_empleado))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Error al actualizar el empleado: {e}")
+            conn.rollback()
+            return False
+        finally:
+            conn.close()
+
+
+    # --- 5. Método ELIMINAR ---
+    def eliminar(self, id_empleado):
+        """Elimina un empleado de la base de datos por su ID."""
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("DELETE FROM EMPLEADO WHERE ID_EMPLEADO = ?", (id_empleado,))
+            conn.commit()
+            return cursor.rowcount > 0  # Retorna True si se eliminó algún registro
+        except sqlite3.Error as e:
+            print(f"Error al eliminar el empleado: {e}")
+            conn.rollback()
+            return False
+        finally:
+            conn.close()

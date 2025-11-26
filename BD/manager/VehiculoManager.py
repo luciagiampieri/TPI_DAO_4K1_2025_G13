@@ -2,7 +2,7 @@ import sqlite3
 from BACK.modelos import Vehiculo 
 from db_conection import DBConnection
 from EstadoManager import EstadoManager
-from CaracteristicasManager import CaracteristicaVehiculoManager 
+from BD.manager.CaracteristicaVehiculoManager import CaracteristicaVehiculoManager 
 
 
 class VehiculoManager:
@@ -12,6 +12,7 @@ class VehiculoManager:
         self.db_connection = DBConnection()
         self.estado_manager = EstadoManager()
         self.caracteristica_manager = CaracteristicaVehiculoManager()
+
 
     def __row_to_vehiculo(self, row):
         """Mapea un registro (fila de la BD) a un objeto Vehiculo, resolviendo todas las dependencias."""
@@ -31,6 +32,7 @@ class VehiculoManager:
             kilometraje=row['KILOMETRAJE'],
             costo_diario=row['COSTO_DIARIO_ALQUILER']
         )
+
 
     # --- 1. Método CREAR (Alta) ---
     def guardar(self, vehiculo):
@@ -58,6 +60,7 @@ class VehiculoManager:
         finally:
             conn.close()
 
+
     # --- 2. Método LEER (Consulta por ID) ---
     def obtener_por_id(self, id_vehiculo):
         """Busca un vehículo por su ID y retorna un objeto Vehiculo."""
@@ -78,6 +81,7 @@ class VehiculoManager:
             
     # También necesitarías los métodos listar_todos, actualizar y eliminar.
     
+    # ?????????????????????????????????????????????????????????
     # --- Lógica de negocio específica del DAO ---
     def actualizar_estado(self, id_vehiculo, nuevo_estado_id):
         """Actualiza solo el estado del vehículo, usado al alquilar/finalizar."""
@@ -89,6 +93,66 @@ class VehiculoManager:
             return cursor.rowcount > 0
         except sqlite3.Error as e:
             print(f"Error al actualizar estado del vehículo: {e}")
+            conn.rollback()
+            return False
+        finally:
+            conn.close()
+
+
+    # --- Método LEER TODO (Listado) ---        
+    def listar_todos(self):
+        """Retorna una lista de todos los objetos Vehiculo."""
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("SELECT * FROM VEHICULO")
+            rows = cursor.fetchall()
+            vehiculos = [self.__row_to_vehiculo(row) for row in rows]
+            return vehiculos
+        finally:
+            conn.close()
+
+
+    # --- Método ACTUALIZAR (Modificación) ---
+    def actualizar(self, vehiculo):
+        """Actualiza los datos de un vehículo existente en la BD."""
+        if not vehiculo.id_vehiculo:
+            print("Error: No se puede actualizar un vehículo sin ID.")
+            return False
+            
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("""
+                UPDATE VEHICULO 
+                SET ID_DETALLE_VEHICULO = ?, ID_ESTADO = ?, PATENTE = ?, KILOMETRAJE = ?, COSTO_DIARIO_ALQUILER = ?
+                WHERE ID_VEHICULO = ?
+                """, (vehiculo.caracteristica_vehiculo.id_caracteristica, 
+                    vehiculo.estado.id_estado, 
+                    vehiculo.patente, 
+                    vehiculo.kilometraje, 
+                    vehiculo.costo_diario,
+                    vehiculo.id_vehiculo))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Error al actualizar el vehículo: {e}")
+
+
+    def eliminar(self, id_vehiculo):
+        """Elimina un vehículo de la BD por su ID."""
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("DELETE FROM VEHICULO WHERE ID_VEHICULO = ?", (id_vehiculo,))
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Error al eliminar el vehículo: {e}")
             conn.rollback()
             return False
         finally:

@@ -6,6 +6,7 @@ class CategoriaManager:
     def __init__(self):
         self.db_connection = DBConnection()
 
+
     def __row_to_categoria(self, row):
         """Mapea un registro a un objeto Categoria."""
         if row is None:
@@ -14,6 +15,7 @@ class CategoriaManager:
             id_categoria=row['ID_CATEGORIA'],
             categoria=row['TX_CATEGORIA'] # Usamos 'TX_CATEGORIA' según tu script SQL
         )
+
 
     def obtener_por_id(self, id_categoria):
         """Busca una categoría por su ID."""
@@ -29,6 +31,7 @@ class CategoriaManager:
             return None
         finally:
             conn.close()
+
 
     def listar_todos(self):
         """Retorna una lista de todos los objetos Categoria."""

@@ -10,6 +10,7 @@ class CaracteristicaVehiculoManager:
         self.db_connection = DBConnection()
         self.categoria_manager = CategoriaManager() # Inyección de dependencia para obtener el objeto Categoria
 
+
     def __row_to_caracteristica(self, row):
         """Mapea un registro a un objeto CaracteristicaVehiculo, resolviendo la dependencia Categoria."""
         if row is None:
@@ -25,6 +26,7 @@ class CaracteristicaVehiculoManager:
             anio=row['AÑO'],
             categoria=categoria_obj # Se almacena el objeto Categoria, no el ID
         )
+
 
     def guardar(self, caracteristica):
         """Inserta una nueva característica en la BD."""
@@ -50,13 +52,28 @@ class CaracteristicaVehiculoManager:
         finally:
             conn.close()
             
-    # También necesitarías obtener_por_id y listar_todos
+    
     def obtener_por_id(self, id_caracteristica):
+        """Busca una característica por su ID."""
         conn = self.db_connection.get_connection()
         cursor = conn.cursor()
+
         try:
             cursor.execute("SELECT * FROM DETALLE_VEHICULO WHERE ID_DETALLE_VEHICULO = ?", (id_caracteristica,))
             row = cursor.fetchone()
             return self.__row_to_caracteristica(row)
+        finally:
+            conn.close()
+
+
+    def listar_todos(self):
+        """Retorna una lista de todas las características de vehículos."""
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("SELECT * FROM DETALLE_VEHICULO")
+            rows = cursor.fetchall()
+            return [self.__row_to_caracteristica(row) for row in rows]
         finally:
             conn.close()

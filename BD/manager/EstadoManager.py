@@ -10,6 +10,7 @@ class EstadoManager:
         self.db_connection = DBConnection()
         self.ambito_dao = AmbitoManager() # Dependencia inyectada (o creada)
 
+
     def __row_to_estado(self, row):
         """Mapea un registro (fila de la BD) a un objeto Estado, resolviendo la dependencia Ambito."""
         if row is None:
@@ -24,6 +25,7 @@ class EstadoManager:
             estado=row['TX_ESTADO'], # Usamos TX_ESTADO según tu script SQL
             ambito=ambito_obj
         )
+
 
     # --- Método LEER (Consulta por ID) ---
     def obtener_por_id(self, id_estado):
@@ -43,6 +45,7 @@ class EstadoManager:
             return None
         finally:
             conn.close()
+
 
     # --- Método LEER TODO (Listado) ---
     def listar_todos(self):

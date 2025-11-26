@@ -9,6 +9,7 @@ class AmbitoManager:
     def __init__(self):
         self.db_connection = DBConnection()
 
+
     def __row_to_ambito(self, row):
         """Mapea un registro (fila de la BD) a un objeto Ambito."""
         if row is None:
@@ -18,6 +19,7 @@ class AmbitoManager:
             id_ambito=row['ID_AMBITO'],
             ambito=row['TX_AMBITO'] # Usamos 'TX_AMBITO' según tu script SQL
         )
+
 
     # --- Método LEER (Consulta por ID) ---
     def obtener_por_id(self, id_ambito):
@@ -37,6 +39,7 @@ class AmbitoManager:
             return None
         finally:
             conn.close()
+
 
     # --- Método LEER TODO (Listado) ---
     def listar_todos(self):

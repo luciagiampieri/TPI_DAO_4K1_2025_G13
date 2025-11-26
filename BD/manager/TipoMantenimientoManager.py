@@ -9,6 +9,7 @@ class TipoMantenimientoManager:
     def __init__(self):
         self.db_connection = DBConnection()
 
+
     def __row_to_tipo_mantenimiento(self, row):
         """Mapea un registro (fila de la BD) a un objeto TipoMantenimiento."""
         if row is None:
@@ -18,6 +19,7 @@ class TipoMantenimientoManager:
             id_tipo_mantenimiento=row['ID_TIPO_MANTENIMIENTO'],
             tipo_mantenimiento=row['TX_TIPO_MANTENIMIENTO'] # Usamos TX_TIPO_MANTENIMIENTO
         )
+
 
     # --- Método LEER (Consulta por ID) ---
     def obtener_por_id(self, id_tipo_mantenimiento):
@@ -31,6 +33,7 @@ class TipoMantenimientoManager:
             return self.__row_to_tipo_mantenimiento(row)
         finally:
             conn.close()
+
 
     # --- Método LEER TODO (Listado) ---
     def listar_todos(self):

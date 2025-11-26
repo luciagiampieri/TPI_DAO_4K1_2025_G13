@@ -2,9 +2,9 @@
 
 from datetime import datetime
 # Importamos todas las clases de dominio que vamos a usar
-from BACK.modelos import Cliente, Vehiculo, Alquiler, Empleado, Estado 
+from BACK.modelos import Cliente, Vehiculo, Alquiler, Empleado, Estado
 # Importamos todos los Managers necesarios para la orquestación
-from ..BD.manager import ClienteManager, VehiculoManager, AlquilerManager, EmpleadoManager, EstadoManager 
+from ..BD.manager import CaracteristicaVehiculoManager, ClienteManager, VehiculoManager, AlquilerManager, EmpleadoManager, EstadoManager, MantenimientoManager, IncidenteManager, TipoIncidenteManager, AmbitoManager, CategoriaManager, TipoMantenimientoManager
 
 class SistemaDeAlquiler:
     def __init__(self):
@@ -14,7 +14,13 @@ class SistemaDeAlquiler:
         self.alquiler_manager = AlquilerManager.AlquilerManager()
         self.empleado_manager = EmpleadoManager.EmpleadoManager()
         self.estado_manager = EstadoManager.EstadoManager()
-        # ... inicializar otros managers (Mantenimiento, Incidentes, etc.)
+        self.mantenimiento_manager = MantenimientoManager.MantenimientoManager()
+        self.incidente_manager = IncidenteManager.IncidenteManager()
+        self.tipo_incidente_manager = TipoIncidenteManager.TipoIncidenteManager()
+        self.ambito_manager = AmbitoManager.AmbitoManager()
+        self.categoria_manager = CategoriaManager.CategoriaManager()
+        self.tipomantenimiento_manager = TipoMantenimientoManager.TipoMantenimientoManager()
+        self.caracteristica_vehiculo_manager = CaracteristicaVehiculoManager.CaracteristicaVehiculoManager()
 
     ## ---------------------------------------------
     ## ABM DE CLIENTES (Ejemplo de delegación pura)
@@ -46,6 +52,7 @@ class SistemaDeAlquiler:
         
         return self.cliente_manager.actualizar(cliente)
 
+
     ## ---------------------------------------------
     ## GESTIÓN DE ALQUILERES (Lógica de Negocio Central)
     ## ---------------------------------------------
@@ -59,8 +66,8 @@ class SistemaDeAlquiler:
         
         # Asumimos ID 101 es 'Disponible' para Vehículos
         if not vehiculo or vehiculo.estado.id_estado != 101:
-             print(f"❌ Vehículo {id_vehiculo} no disponible por estado actual ({vehiculo.estado.estado}).")
-             return False
+            print(f"❌ Vehículo {id_vehiculo} no disponible por estado actual ({vehiculo.estado.estado}).")
+            return False
 
         # Verifica solapamiento de fechas en alquileres ACTIVO (ID_ESTADO = 201)
         # Esto debe ser implementado con una consulta específica en el AlquilerManager
@@ -72,12 +79,12 @@ class SistemaDeAlquiler:
         )
         
         if alquileres_solapados:
-             print(f"❌ Vehículo {id_vehiculo} tiene alquileres activos que se solapan.")
-             return False
-             
+            print(f"❌ Vehículo {id_vehiculo} tiene alquileres activos que se solapan.")
+            return False
+        
         # También se debería chequear mantenimiento
         # MantenimientoManager.buscar_mantenimientos_solapados(...)
-             
+            
         return True # Disponible
         
     def registrar_alquiler(self, id_vehiculo, id_cliente, id_empleado, fecha_inicio, fecha_fin):

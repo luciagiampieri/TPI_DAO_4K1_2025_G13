@@ -21,6 +21,7 @@ class ClienteManager:
             mail=row['MAIL']
         )
         
+
     # --- 1. Método CREAR (Alta) ---
     def guardar(self, cliente):
         """Guarda un nuevo cliente en la base de datos."""
@@ -46,6 +47,7 @@ class ClienteManager:
         finally:
             conn.close()
 
+
     # --- 2. Método LEER (Consulta por ID) ---
     def obtener_por_id(self, id_cliente):
         """Busca un cliente por su ID y retorna un objeto Cliente."""
@@ -65,6 +67,7 @@ class ClienteManager:
         finally:
             conn.close()
 
+
     # --- 3. Método LEER TODO (Listado) ---
     def listar_todos(self):
         """Retorna una lista de todos los objetos Cliente."""
@@ -83,6 +86,47 @@ class ClienteManager:
         finally:
             conn.close()
             
-    # --- 4. Método ACTUALIZAR (Modificación) y 5. Método ELIMINAR (Baja)
-    # ... (La lógica de actualizar y eliminar es la misma, ya que no hacen mapeo)
-    # ... (No necesitan cambios)
+
+    # --- 4. Método ACTUALIZAR (Modificación)
+    def actualizar(self, cliente):
+        """Actualiza los datos de un cliente existente."""
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("""
+                UPDATE CLIENTE 
+                SET NOMBRE = ?, DNI = ?, TELEFONO = ?, MAIL = ? 
+                WHERE ID_CLIENTE = ?
+            """, (cliente.nombre, cliente.dni, cliente.telefono, cliente.mail, cliente.id_cliente))
+            
+            conn.commit()
+            return cursor.rowcount > 0  # Retorna True si se actualizó algún registro
+        except sqlite3.IntegrityError:
+            print(f"Error: Ya existe un cliente con el DNI {cliente.dni}.")
+            return False
+        except sqlite3.Error as e:
+            print(f"Error al actualizar el cliente: {e}")
+            conn.rollback()
+            return False
+        finally:
+            conn.close()
+    
+    
+    # HACE FALTA ELIMINAR UN CLIENTE???
+    # 5. Método ELIMINAR (Baja)
+    def eliminar(self, id_cliente):
+        """Elimina un cliente de la base de datos por su ID."""
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("DELETE FROM CLIENTE WHERE ID_CLIENTE = ?", (id_cliente,))
+            conn.commit()
+            return cursor.rowcount > 0  # Retorna True si se eliminó algún registro
+        except sqlite3.Error as e:
+            print(f"Error al eliminar el cliente: {e}")
+            conn.rollback()
+            return False
+        finally:
+            conn.close()
