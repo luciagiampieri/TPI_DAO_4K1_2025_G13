@@ -112,21 +112,3 @@ class ClienteManager:
         finally:
             conn.close()
     
-    
-    # HACE FALTA ELIMINAR UN CLIENTE???
-    # 5. Método ELIMINAR (Baja)
-    def eliminar(self, id_cliente):
-        """Elimina un cliente de la base de datos por su ID."""
-        conn = self.db_connection.get_connection()
-        cursor = conn.cursor()
-        
-        try:
-            cursor.execute("DELETE FROM CLIENTE WHERE ID_CLIENTE = ?", (id_cliente,))
-            conn.commit()
-            return cursor.rowcount > 0  # Retorna True si se eliminó algún registro
-        except sqlite3.Error as e:
-            print(f"Error al eliminar el cliente: {e}")
-            conn.rollback()
-            return False
-        finally:
-            conn.close()

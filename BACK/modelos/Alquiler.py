@@ -11,6 +11,23 @@ class Alquiler:
         self.costo_total = costo_total
         self.estado = estado
 
+
+    def calcular_costo(self):
+        """Calcula el costo total del alquiler basado en la duración y el costo diario del vehículo."""
+        if self.fecha_fin and self.fecha_inicio:
+            dias_alquiler = (self.fecha_fin - self.fecha_inicio).days + 1
+            self.costo_total = dias_alquiler * self.vehiculo.costo_diario
+        else:
+            self.costo_total = 0
+
+    
+    def finalizar_alquiler(self, km_final):
+        """Finaliza el alquiler actualizando la fecha de fin y calculando el costo total."""
+        from datetime import datetime
+        self.fecha_fin = datetime.now()
+        self.calcular_costo()
+        self.estado = Estado.Estado(8, "Finalizado")  # Asumiendo 8 es el ID para 'Finalizado'
+
     
     def __str__(self):
         return f"Alquiler {self.id_alquiler}, Vehiculo: {self.vehiculo}, Cliente: {self.cliente}, Desde: {self.fecha_inicio}, Hasta: {self.fecha_fin}, Costo Total: {self.costo_total}"

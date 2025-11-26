@@ -149,7 +149,7 @@ class AlquilerManager:
             conn.close()
 
 
-    # --- 5. Método BORRAR (Baja) ---
+    # --- 5. Método (Baja) ---
     def cancelar(self, alquiler):
         """Actualizar a estado cancelado un alquiler en la BD."""
         if not alquiler.id_alquiler:
@@ -164,10 +164,10 @@ class AlquilerManager:
             fec_fin_str = alquiler.fecha_fin.strftime('%Y-%m-%d %H:%M:%S')
         
         # PONER EL ID DE ESTADO 'CANCELADO' SEGÚN CORRESPONDA
-            # Asumiendo que el ID del estado 'cancelado' es 3
+            # Asumiendo que el ID del estado 'cancelado' es 5
             cursor.execute("""
                 UPDATE ALQUILER SET ID_ESTADO = ?, FEC_INICIO = ?, FEC_FIN = ? WHERE ID_ALQUILER = ?
-            """, (3, fec_inicio_str, fec_fin_str, alquiler.id_alquiler))
+            """, (5, fec_inicio_str, fec_fin_str, alquiler.id_alquiler))
             
             conn.commit()
             return cursor.rowcount > 0
