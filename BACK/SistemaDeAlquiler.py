@@ -4,7 +4,7 @@ from datetime import datetime
 # Importamos todas las clases de dominio que vamos a usar
 from modelos import Cliente, Vehiculo, Alquiler, Empleado, Estado
 # Importamos todos los Managers necesarios para la orquestación
-from ..BD.manager import CaracteristicaVehiculoManager, ClienteManager, VehiculoManager, AlquilerManager, EmpleadoManager, EstadoManager, MantenimientoManager, IncidenteManager, TipoIncidenteManager, AmbitoManager, CategoriaManager, TipoMantenimientoManager
+from BD.manager import CaracteristicaVehiculoManager, ClienteManager, VehiculoManager, AlquilerManager, EmpleadoManager, EstadoManager, MantenimientoManager, IncidenteManager, TipoIncidenteManager, AmbitoManager, CategoriaManager, TipoMantenimientoManager
 
 class SistemaDeAlquiler:
     def __init__(self):

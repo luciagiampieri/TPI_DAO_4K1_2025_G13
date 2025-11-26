@@ -1,6 +1,7 @@
+// FRONTEND/src/services/clienteService.js
+
 import axios from 'axios';
 // Asumimos que el proxy de Vite en vite.config.js apunta a Flask
-
 const API_URL = '/api/clientes'; 
 
 export const getClientes = async () => {

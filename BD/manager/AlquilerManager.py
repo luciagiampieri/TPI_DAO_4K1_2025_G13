@@ -1,11 +1,11 @@
 import sqlite3
 from datetime import datetime
 from BACK.modelos import Alquiler
-from db_conection import DBConnection
-from VehiculoManager import VehiculoManager 
-from ClienteManager import ClienteManager 
-from EmpleadoManager import EmpleadoManager 
-from EstadoManager import EstadoManager 
+from ..db_conection import DBConnection
+from .VehiculoManager import VehiculoManager 
+from .ClienteManager import ClienteManager 
+from .EmpleadoManager import EmpleadoManager 
+from .EstadoManager import EstadoManager 
 
 class AlquilerManager:
     """Clase Manager para manejar SOLO la persistencia (CRUD) de objetos Alquiler."""

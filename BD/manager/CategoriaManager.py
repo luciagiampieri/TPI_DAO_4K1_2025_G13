@@ -1,6 +1,6 @@
 import sqlite3
-from ...BACK.modelos import Categoria 
-from db_conection import DBConnection
+from BACK.modelos import Categoria 
+from ..db_conection import DBConnection
 
 class CategoriaManager:
     def __init__(self):

@@ -1,9 +1,9 @@
 import sqlite3
 from datetime import datetime
 from BACK.modelos import Mantenimiento
-from db_conection import DBConnection
-from VehiculoManager import VehiculoManager 
-from TipoMantenimientoManager import TipoMantenimientoManager 
+from ..db_conection import DBConnection
+from .VehiculoManager import VehiculoManager 
+from .TipoMantenimientoManager import TipoMantenimientoManager 
 
 class MantenimientoManager:
     """Clase Manager para manejar la persistencia de objetos Mantenimiento."""

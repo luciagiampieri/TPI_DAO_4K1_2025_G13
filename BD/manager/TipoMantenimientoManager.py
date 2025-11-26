@@ -1,6 +1,6 @@
 import sqlite3
 from BACK.modelos import TipoMantenimiento
-from db_conection import DBConnection
+from ..db_conection import DBConnection
 
 
 class TipoMantenimientoManager:

@@ -1,11 +1,8 @@
-# IncidenteManager.py
-
 import sqlite3
 from datetime import datetime
 from BACK.modelos import Incidente
-from db_conection import DBConnection
-# Importamos los Managers de las dependencias
-from TipoIncidenteManager import TipoIncidenteManager
+from ..db_conection import DBConnection
+from .TipoIncidenteManager import TipoIncidenteManager
 # from .AlquilerManager import AlquilerManager # Necesario para resolver la dependencia 'alquiler'
 
 class IncidenteManager:

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Home/Dashboard';
 import React from 'react';
+import ClientesList from './pages/Clients/ClientesList';
 
 // Placeholder para páginas que aún no creamos
 const PaginaEnConstruccion = ({ titulo }) => (
@@ -16,7 +17,7 @@ function App() {
             <Layout>
                 <Routes>
                 <Route path="/" element={<Dashboard />} />
-                <Route path="/clientes" element={<PaginaEnConstruccion titulo="Clientes" />} />
+                <Route path="/clientes" element={<ClientesList />} />
                 <Route path="/vehiculos" element={<PaginaEnConstruccion titulo="Vehículos" />} />
                 <Route path="/alquileres" element={<PaginaEnConstruccion titulo="Alquileres" />} />
                 <Route path="/reportes" element={<PaginaEnConstruccion titulo="Reportes" />} />

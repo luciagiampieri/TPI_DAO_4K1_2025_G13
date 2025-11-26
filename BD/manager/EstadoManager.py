@@ -1,7 +1,7 @@
 import sqlite3
 from BACK.modelos import Estado
-from db_conection import DBConnection
-from AmbitoManager import AmbitoManager 
+from ..db_conection import DBConnection
+from .AmbitoManager import AmbitoManager 
 
 class EstadoManager:
     """Clase Manager para manejar la persistencia de objetos Estado."""

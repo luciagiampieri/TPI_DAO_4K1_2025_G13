@@ -2,7 +2,7 @@
 
 import sqlite3
 from BACK.modelos import Empleado
-from db_conection import DBConnection
+from ..db_conection import DBConnection
 
 class EmpleadoManager:
     """Clase Manager para manejar la persistencia de objetos Empleado (ABM)."""

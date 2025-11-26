@@ -1,7 +1,7 @@
 import sqlite3
 from BACK.modelos import Vehiculo 
-from db_conection import DBConnection
-from EstadoManager import EstadoManager
+from ..db_conection import DBConnection
+from .EstadoManager import EstadoManager
 from BD.manager.CaracteristicaVehiculoManager import CaracteristicaVehiculoManager 
 
 

@@ -1,6 +1,6 @@
 import sqlite3
-from ...BACK.modelos import Cliente
-from db_conection import DBConnection
+from BACK.modelos import Cliente
+from ..db_conection import DBConnection
 
 class ClienteManager:
     """Clase Manager para manejar la persistencia de objetos Cliente."""

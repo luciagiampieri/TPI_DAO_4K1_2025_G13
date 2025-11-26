@@ -7,7 +7,7 @@ const Sidebar = () => {
 
     // Array con las opciones para no repetir código
     const menuItems = [
-        { path: '/', name: 'Dashboard', icon: HomeIcon },
+        { path: '/', name: 'Home', icon: HomeIcon },
         { path: '/clientes', name: 'Clientes', icon: UserGroupIcon },
         { path: '/vehiculos', name: 'Vehículos', icon: TruckIcon },
         { path: '/alquileres', name: 'Alquileres', icon: ClipboardDocumentListIcon },

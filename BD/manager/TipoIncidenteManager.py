@@ -1,6 +1,6 @@
 import sqlite3
 from BACK.modelos import TipoIncidente
-from db_conection import DBConnection
+from ..db_conection import DBConnection
 
 class TipoIncidenteManager:
     """Clase Manager para manejar la persistencia de objetos TipoIncidente."""
