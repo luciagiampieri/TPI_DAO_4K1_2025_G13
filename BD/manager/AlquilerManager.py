@@ -1,15 +1,18 @@
-import sqlite3
+import mysql.connector
 from datetime import datetime
-from BACK.modelos import Alquiler
+
+from BACK.modelos.Alquiler import Alquiler
 from ..db_conection import DBConnection
+
 from .VehiculoManager import VehiculoManager 
 from .ClienteManager import ClienteManager 
 from .EmpleadoManager import EmpleadoManager 
-from .EstadoManager import EstadoManager 
+from .EstadoManager import EstadoManager
+
 
 class AlquilerManager:
-    """Clase Manager para manejar SOLO la persistencia (CRUD) de objetos Alquiler."""
-    
+    """Manager para manejar la persistencia de objetos Alquiler (MySQL)."""
+
     def __init__(self):
         self.db_connection = DBConnection()
         self.vehiculo_manager = VehiculoManager()
@@ -17,23 +20,23 @@ class AlquilerManager:
         self.empleado_manager = EmpleadoManager()
         self.estado_manager = EstadoManager()
 
-
+    # ----------------------------------------------------------
+    #   MAPEO FILA → OBJETO ALQUILER
+    # ----------------------------------------------------------
     def __row_to_alquiler(self, row):
-        """Mapea un registro a un objeto Alquiler, resolviendo dependencias."""
         if row is None:
             return None
-            
-        # 1. Resolver dependencias
+
+        # Resolver dependencias
         vehiculo_obj = self.vehiculo_manager.obtener_por_id(row['ID_VEHICULO'])
         cliente_obj = self.cliente_manager.obtener_por_id(row['ID_CLIENTE'])
         empleado_obj = self.empleado_manager.obtener_por_id(row['ID_EMPLEADO'])
         estado_obj = self.estado_manager.obtener_por_id(row['ID_ESTADO'])
-        
-        # Las fechas deben convertirse de string a objeto datetime
+
+        # Convertir fechas desde string MySQL
         fec_inicio = datetime.strptime(row['FEC_INICIO'], '%Y-%m-%d %H:%M:%S')
         fec_fin = datetime.strptime(row['FEC_FIN'], '%Y-%m-%d %H:%M:%S')
-        
-        # 2. Crear y retornar el objeto Alquiler
+
         return Alquiler(
             id_alquiler=row['ID_ALQUILER'],
             vehiculo=vehiculo_obj,
@@ -45,152 +48,185 @@ class AlquilerManager:
             estado=estado_obj
         )
 
-    
-    # --- 1. Método CREAR (Alta de Alquiler) ---
+    # ----------------------------------------------------------
+    #   CREAR
+    # ----------------------------------------------------------
     def guardar(self, alquiler):
-        """Inserta un nuevo alquiler en la BD."""
         conn = self.db_connection.get_connection()
         cursor = conn.cursor()
-        
+
         try:
             fec_inicio_str = alquiler.fecha_inicio.strftime('%Y-%m-%d %H:%M:%S')
             fec_fin_str = alquiler.fecha_fin.strftime('%Y-%m-%d %H:%M:%S')
 
             cursor.execute("""
-                INSERT INTO ALQUILER (ID_VEHICULO, ID_EMPLEADO, ID_CLIENTE, FEC_INICIO, FEC_FIN, COSTO_TOTAL, ID_ESTADO) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (alquiler.vehiculo.id_vehiculo, 
-                    alquiler.empleado.id_empleado, 
-                    alquiler.cliente.id_cliente, 
-                    fec_inicio_str, 
-                    fec_fin_str, 
-                    alquiler.costo_total, 
-                    alquiler.estado.id_estado)
-            )
-            
+                INSERT INTO ALQUILER 
+                    (ID_VEHICULO, ID_EMPLEADO, ID_CLIENTE, 
+                     FEC_INICIO, FEC_FIN, COSTO_TOTAL, ID_ESTADO)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (
+                alquiler.vehiculo.id_vehiculo,
+                alquiler.empleado.id_empleado,
+                alquiler.cliente.id_cliente,
+                fec_inicio_str,
+                fec_fin_str,
+                alquiler.costo_total,
+                alquiler.estado.id_estado
+            ))
+
             alquiler.id_alquiler = cursor.lastrowid
             conn.commit()
-            print(f"✅ Alquiler ID {alquiler.id_alquiler} persistido.")
             return alquiler
-        except sqlite3.Error as e:
-            print(f"Error al guardar el alquiler: {e}")
+
+        except mysql.connector.Error as e:
+            print(f"Error al guardar alquiler: {e}")
             conn.rollback()
             return None
         finally:
+            cursor.close()
             conn.close()
 
-
-    # --- 2. Método LEER (Consulta por ID) ---
+    # ----------------------------------------------------------
+    #   OBTENER POR ID
+    # ----------------------------------------------------------
     def obtener_por_id(self, id_alquiler):
-        """Busca un alquiler por su ID y retorna un objeto Alquiler."""
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor()
-        
+        cursor = conn.cursor(dictionary=True)
+
         try:
-            cursor.execute("SELECT * FROM ALQUILER WHERE ID_ALQUILER = ?", (id_alquiler,))
+            cursor.execute("SELECT * FROM ALQUILER WHERE ID_ALQUILER = %s", (id_alquiler,))
             row = cursor.fetchone()
-            
             return self.__row_to_alquiler(row)
-            
-        except sqlite3.Error as e:
+
+        except mysql.connector.Error as e:
             print(f"Error al obtener alquiler: {e}")
             return None
         finally:
+            cursor.close()
             conn.close()
-    
 
-    # --- 3. Método LEER TODO (Listado) ---
+    # ----------------------------------------------------------
+    #   LISTAR TODOS
+    # ----------------------------------------------------------
     def listar_todos(self):
-        """Retorna una lista de todos los objetos Alquiler."""
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor()
-        
+        cursor = conn.cursor(dictionary=True)
+
         try:
             cursor.execute("SELECT * FROM ALQUILER")
-            alquileres = [self.__row_to_alquiler(row) for row in cursor.fetchall()]
-            return alquileres
-        except sqlite3.Error as e:
+            rows = cursor.fetchall()
+            return [self.__row_to_alquiler(row) for row in rows]
+
+        except mysql.connector.Error as e:
             print(f"Error al listar alquileres: {e}")
             return []
         finally:
+            cursor.close()
             conn.close()
 
-
-    # --- 4. Método ACTUALIZAR (Modificación) ---
+    # ----------------------------------------------------------
+    #   ACTUALIZAR
+    # ----------------------------------------------------------
     def actualizar(self, alquiler):
-        """Actualiza los datos de un alquiler existente en la BD."""
         if not alquiler.id_alquiler:
-            print("Error: No se puede actualizar un alquiler sin ID.")
+            print("Error: alquiler sin ID.")
             return False
-            
+
         conn = self.db_connection.get_connection()
         cursor = conn.cursor()
-        
+
         try:
             fec_inicio_str = alquiler.fecha_inicio.strftime('%Y-%m-%d %H:%M:%S')
             fec_fin_str = alquiler.fecha_fin.strftime('%Y-%m-%d %H:%M:%S')
-            
+
             cursor.execute("""
                 UPDATE ALQUILER SET 
-                    ID_VEHICULO = ?, ID_EMPLEADO = ?, ID_CLIENTE = ?, 
-                    FEC_INICIO = ?, FEC_FIN = ?, COSTO_TOTAL = ?, ID_ESTADO = ?
-                WHERE ID_ALQUILER = ?
-            """, (alquiler.vehiculo.id_vehiculo, alquiler.empleado.id_empleado, alquiler.cliente.id_cliente, 
-                fec_inicio_str, fec_fin_str, alquiler.costo_total, alquiler.estado.id_estado, 
-                alquiler.id_alquiler))
-            
+                    ID_VEHICULO = %s,
+                    ID_EMPLEADO = %s,
+                    ID_CLIENTE = %s,
+                    FEC_INICIO = %s,
+                    FEC_FIN = %s,
+                    COSTO_TOTAL = %s,
+                    ID_ESTADO = %s
+                WHERE ID_ALQUILER = %s
+            """, (
+                alquiler.vehiculo.id_vehiculo,
+                alquiler.empleado.id_empleado,
+                alquiler.cliente.id_cliente,
+                fec_inicio_str,
+                fec_fin_str,
+                alquiler.costo_total,
+                alquiler.estado.id_estado,
+                alquiler.id_alquiler
+            ))
+
             conn.commit()
             return cursor.rowcount > 0
-        except sqlite3.Error as e:
-            print(f"Error al actualizar el alquiler: {e}")
+
+        except mysql.connector.Error as e:
+            print(f"Error al actualizar alquiler: {e}")
             conn.rollback()
             return False
         finally:
+            cursor.close()
             conn.close()
 
-
-    # --- 5. Método (Baja) ---
+    # ----------------------------------------------------------
+    #   CANCELAR (CAMBIAR ESTADO)
+    # ----------------------------------------------------------
     def cancelar(self, alquiler):
-        """Actualizar a estado cancelado un alquiler en la BD."""
         if not alquiler.id_alquiler:
-            print("Error: No se puede actualizar un alquiler sin ID.")
+            print("Error: alquiler sin ID.")
             return False
-            
+
         conn = self.db_connection.get_connection()
         cursor = conn.cursor()
-        
+
         try:
             fec_inicio_str = alquiler.fecha_inicio.strftime('%Y-%m-%d %H:%M:%S')
             fec_fin_str = alquiler.fecha_fin.strftime('%Y-%m-%d %H:%M:%S')
-        
-        # PONER EL ID DE ESTADO 'CANCELADO' SEGÚN CORRESPONDA
-            # Asumiendo que el ID del estado 'cancelado' es 5
+
+            CANCELADO_ID = 5  # Ajustá según tu tabla ESTADO
+
             cursor.execute("""
-                UPDATE ALQUILER SET ID_ESTADO = ?, FEC_INICIO = ?, FEC_FIN = ? WHERE ID_ALQUILER = ?
-            """, (5, fec_inicio_str, fec_fin_str, alquiler.id_alquiler))
-            
+                UPDATE ALQUILER SET 
+                    ID_ESTADO = %s,
+                    FEC_INICIO = %s,
+                    FEC_FIN = %s
+                WHERE ID_ALQUILER = %s
+            """, (
+                CANCELADO_ID,
+                fec_inicio_str,
+                fec_fin_str,
+                alquiler.id_alquiler
+            ))
+
             conn.commit()
             return cursor.rowcount > 0
-        except sqlite3.Error as e:
-            print(f"Error al cancelar el alquiler: {e}")
+
+        except mysql.connector.Error as e:
+            print(f"Error al cancelar alquiler: {e}")
             conn.rollback()
             return False
         finally:
+            cursor.close()
             conn.close()
 
-
-    # --- Metodo listar alquileres por clientes
+    # ----------------------------------------------------------
+    #   LISTAR POR CLIENTE
+    # ----------------------------------------------------------
     def listar_por_cliente(self, id_cliente):
-        """Retorna una lista de todos los objetos Alquiler de un cliente."""
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor()
-        
+        cursor = conn.cursor(dictionary=True)
+
         try:
-            cursor.execute("SELECT * FROM ALQUILER WHERE ID_CLIENTE = ?", (id_cliente,))
-            alquileres = [self.__row_to_alquiler(row) for row in cursor.fetchall()]
-            return alquileres
-        except sqlite3.Error as e:
+            cursor.execute("SELECT * FROM ALQUILER WHERE ID_CLIENTE = %s", (id_cliente,))
+            rows = cursor.fetchall()
+            return [self.__row_to_alquiler(row) for row in rows]
+
+        except mysql.connector.Error as e:
             print(f"Error al listar alquileres por cliente: {e}")
             return []
         finally:
+            cursor.close()
             conn.close()

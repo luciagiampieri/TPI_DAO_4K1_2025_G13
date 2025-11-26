@@ -15,10 +15,7 @@ class DBConnection:
     def get_connection(self):
         """Retorna una conexión activa a la base de datos MySQL."""
         try:
-            conn = mysql.connector.connect(
-                **self.config,
-                cursor_class=mysql.connector.cursor.MySQLCursorDict
-                )
+            conn = mysql.connector.connect(**self.config)
             return conn
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:

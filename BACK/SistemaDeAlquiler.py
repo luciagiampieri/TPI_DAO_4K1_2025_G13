@@ -2,7 +2,7 @@
 
 from datetime import datetime
 # Importamos todas las clases de dominio que vamos a usar
-from modelos import Cliente, Vehiculo, Alquiler, Empleado, Estado
+from .modelos import Cliente, Vehiculo, Alquiler, Empleado, Estado
 # Importamos todos los Managers necesarios para la orquestación
 from BD.manager import CaracteristicaVehiculoManager, ClienteManager, VehiculoManager, AlquilerManager, EmpleadoManager, EstadoManager, MantenimientoManager, IncidenteManager, TipoIncidenteManager, AmbitoManager, CategoriaManager, TipoMantenimientoManager
 
@@ -162,3 +162,74 @@ class SistemaDeAlquiler:
         # Esta consulta compleja debe ir en el AlquilerManager como un método específico.
         # return self.alquiler_manager.listar_por_cliente(id_cliente)
         pass # Implementación pendiente
+
+
+    def listar_categorias(self):
+        return self.categoria_manager.listar_todos()
+    
+    def listar_estados_por_ambito(self, ambito_id):
+        return self.estado_manager.listar_por_ambito(ambito_id)
+    
+
+    def obtener_estado(self, id_estado):
+        """Método auxiliar para obtener un objeto Estado completo."""
+        return self.estado_manager.obtener_por_id(id_estado)
+
+    # --- ABM DE VEHÍCULOS ---
+    
+    def crear_vehiculo(self, modelo, anio, id_categoria, patente, kilometraje, costo_diario, id_estado):
+        """
+        Lógica de Alta: Crea la característica, luego el vehículo.
+        """
+        
+        # 1. Obtener objetos de consulta (dependencias)
+        categoria = self.categoria_manager.obtener_por_id(id_categoria)
+        # Usar el método auxiliar para obtener el objeto Estado
+        estado_inicial = self.obtener_estado(id_estado)
+        
+        if not categoria or not estado_inicial:
+            print(f"❌ Error: Categoría ({id_categoria}) o Estado ({id_estado}) inicial no encontrados.") 
+            return None
+
+        # 2. Crear y persistir la Característica/Detalle del Vehículo
+        # NOTA: Debes pasar el objeto Categoria, no solo el ID, si el Manager lo espera.
+        detalle = self.caracteristica_vehiculo_manager.crear_detalle(modelo, anio, categoria)
+        
+        if not detalle:
+            return None
+
+        # 3. Crear el objeto Vehiculo
+        vehiculo = Vehiculo.Vehiculo(
+            id_vehiculo=None,
+            caracteristica_vehiculo=detalle,
+            estado=estado_inicial,
+            patente=patente,
+            kilometraje=float(kilometraje), # Asegurar tipo numérico
+            costo_diario=int(costo_diario) # Asegurar tipo entero
+        )
+        
+        # 4. Persistir el objeto Vehículo
+        return self.vehiculo_manager.guardar(vehiculo)
+
+    def listar_vehiculos(self):
+        """Retorna la lista de objetos Vehiculo completos."""
+        # Delega al Manager que obtiene los datos e intenta resolver las FKs en el Manager.
+        return self.vehiculo_manager.listar_todos()
+    
+    def eliminar_vehiculo(self, id_vehiculo):
+        """Lógica de Eliminación de un Vehículo (si no tiene alquileres activos)."""
+        vehiculo = self.vehiculo_manager.obtener_por_id(id_vehiculo)
+        
+        if not vehiculo:
+            print(f"❌ Vehículo {id_vehiculo} no encontrado.")
+            return False
+        
+        # LÓGICA DE NEGOCIO: Verificar que no tenga alquileres activos
+        # alquileres_activos = self.alquiler_manager.listar_alquileres_activos_por_vehiculo(id_vehiculo)
+        
+        # if alquileres_activos:
+        #     print(f"❌ No se puede eliminar el vehículo {id_vehiculo} porque tiene alquileres activos.")
+        #     return False
+        
+        # Delegar la eliminación al Manager
+        return self.vehiculo_manager.eliminar(id_vehiculo)

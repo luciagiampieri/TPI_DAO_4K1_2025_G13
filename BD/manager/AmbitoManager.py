@@ -1,60 +1,71 @@
-import sqlite3
-from BACK.modelos import Ambito 
+import mysql.connector
+from BACK.modelos.Ambito import Ambito
 from ..db_conection import DBConnection
 
 
 class AmbitoManager:
-    """Clase DAO para manejar la persistencia de objetos Ambito."""
-    
+    """Manager para manejar la persistencia de objetos Ambito en MySQL."""
+
     def __init__(self):
         self.db_connection = DBConnection()
 
-
+    # ----------------------------------------------------------
+    #   MAPEO FILA → OBJETO
+    # ----------------------------------------------------------
     def __row_to_ambito(self, row):
-        """Mapea un registro (fila de la BD) a un objeto Ambito."""
         if row is None:
             return None
-            
+
         return Ambito(
             id_ambito=row['ID_AMBITO'],
-            ambito=row['TX_AMBITO'] # Usamos 'TX_AMBITO' según tu script SQL
+            ambito=row['TX_AMBITO']
         )
 
-
-    # --- Método LEER (Consulta por ID) ---
+    # ----------------------------------------------------------
+    #   OBTENER POR ID
+    # ----------------------------------------------------------
     def obtener_por_id(self, id_ambito):
-        """Busca un ámbito por su ID y retorna un objeto Ambito."""
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor()
-        
+        cursor = conn.cursor(dictionary=True)
+
         try:
-            cursor.execute("SELECT ID_AMBITO, TX_AMBITO FROM AMBITO WHERE ID_AMBITO = ?", (id_ambito,))
+            cursor.execute("""
+                SELECT ID_AMBITO, TX_AMBITO
+                FROM AMBITO
+                WHERE ID_AMBITO = %s
+            """, (id_ambito,))
+
             row = cursor.fetchone()
-            
-            # Usamos la función de mapeo interna
             return self.__row_to_ambito(row)
-            
-        except sqlite3.Error as e:
+
+        except mysql.connector.Error as e:
             print(f"Error al obtener ámbito: {e}")
             return None
+
         finally:
+            cursor.close()
             conn.close()
 
-
-    # --- Método LEER TODO (Listado) ---
+    # ----------------------------------------------------------
+    #   LISTAR TODOS
+    # ----------------------------------------------------------
     def listar_todos(self):
-        """Retorna una lista de todos los objetos Ambito."""
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor()
-        
+        cursor = conn.cursor(dictionary=True)
+
         try:
-            cursor.execute("SELECT ID_AMBITO, TX_AMBITO FROM AMBITO")
-            
-            # Mapeamos cada registro de la lista con la función interna
-            ambitos = [self.__row_to_ambito(row) for row in cursor.fetchall()]
-            return ambitos
-        except sqlite3.Error as e:
+            cursor.execute("""
+                SELECT ID_AMBITO, TX_AMBITO
+                FROM AMBITO
+            """)
+
+            rows = cursor.fetchall()
+            return [self.__row_to_ambito(row) for row in rows]
+
+        except mysql.connector.Error as e:
             print(f"Error al listar ámbitos: {e}")
             return []
+
         finally:
+            cursor.close()
             conn.close()

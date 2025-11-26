@@ -1,79 +1,103 @@
-import sqlite3
-from BACK.modelos import CaracteristicaVehiculo, Categoria 
-from .CategoriaManager import CategoriaManager
+import mysql.connector
+from BACK.modelos.CaracteristicaVehiculo import CaracteristicaVehiculo
 from ..db_conection import DBConnection
 from .CategoriaManager import CategoriaManager
 
 
 class CaracteristicaVehiculoManager:
+
     def __init__(self):
         self.db_connection = DBConnection()
-        self.categoria_manager = CategoriaManager() # Inyección de dependencia para obtener el objeto Categoria
+        self.categoria_manager = CategoriaManager()
 
-
+    # ----------------------------------------------------------
+    # MAPEAR FILA A OBJETO
+    # ----------------------------------------------------------
     def __row_to_caracteristica(self, row):
-        """Mapea un registro a un objeto CaracteristicaVehiculo, resolviendo la dependencia Categoria."""
         if row is None:
             return None
-            
-        # 1. Obtener el objeto Categoria completo usando su ID
+
         categoria_obj = self.categoria_manager.obtener_por_id(row['ID_CATEGORIA'])
-        
-        # 2. Crear y retornar el objeto CaracteristicaVehiculo
+
         return CaracteristicaVehiculo(
-            id_caracteristica=row['ID_DETALLE_VEHICULO'], # Usamos el nombre de la tabla de tu SQL
+            id_caracteristica=row['ID_DETALLE_VEHICULO'],
             modelo=row['MODELO'],
-            anio=row['AÑO'],
-            categoria=categoria_obj # Se almacena el objeto Categoria, no el ID
+            anio=row['AÑO'],          # Ajustar si usás AÑO en la BD
+            categoria=categoria_obj
         )
 
-
+    # ----------------------------------------------------------
+    # INSERTAR REGISTRO
+    # ----------------------------------------------------------
     def guardar(self, caracteristica):
-        """Inserta una nueva característica en la BD."""
         conn = self.db_connection.get_connection()
         cursor = conn.cursor()
-        
+
         try:
-            # Insertamos el ID de la Categoría, no el objeto Categoria
-            categoria_id = caracteristica.categoria.id_categoria
-            
             cursor.execute("""
-                INSERT INTO DETALLE_VEHICULO (MODELO, "AÑO", ID_CATEGORIA) 
-                VALUES (?, ?, ?)
-            """, (caracteristica.modelo, caracteristica.anio, categoria_id))
-            
+                INSERT INTO DETALLE_VEHICULO (MODELO, AÑO, ID_CATEGORIA)
+                VALUES (%s, %s, %s)
+            """, (
+                caracteristica.modelo,
+                caracteristica.anio,
+                caracteristica.categoria.id_categoria
+            ))
+
             caracteristica.id_caracteristica = cursor.lastrowid
             conn.commit()
             return caracteristica
-        except sqlite3.Error as e:
+
+        except mysql.connector.Error as e:
             print(f"Error al guardar CaracteristicaVehiculo: {e}")
             conn.rollback()
             return None
+
         finally:
+            cursor.close()
             conn.close()
-            
-    
+
+    # ----------------------------------------------------------
+    # OBTENER POR ID
+    # ----------------------------------------------------------
     def obtener_por_id(self, id_caracteristica):
-        """Busca una característica por su ID."""
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
 
         try:
-            cursor.execute("SELECT * FROM DETALLE_VEHICULO WHERE ID_DETALLE_VEHICULO = ?", (id_caracteristica,))
+            cursor.execute("""
+                SELECT * 
+                FROM DETALLE_VEHICULO 
+                WHERE ID_DETALLE_VEHICULO = %s
+            """, (id_caracteristica,))
+
             row = cursor.fetchone()
             return self.__row_to_caracteristica(row)
+
         finally:
+            cursor.close()
             conn.close()
 
-
+    # ----------------------------------------------------------
+    # LISTAR TODOS
+    # ----------------------------------------------------------
     def listar_todos(self):
-        """Retorna una lista de todas las características de vehículos."""
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
 
         try:
             cursor.execute("SELECT * FROM DETALLE_VEHICULO")
             rows = cursor.fetchall()
             return [self.__row_to_caracteristica(row) for row in rows]
+
         finally:
+            cursor.close()
             conn.close()
+
+    def crear_detalle(self, modelo, anio, categoria):
+        nueva_caracteristica = CaracteristicaVehiculo(
+            id_caracteristica=None,
+            modelo=modelo,
+            anio=anio,
+            categoria=categoria
+        )
+        return self.guardar(nueva_caracteristica)
