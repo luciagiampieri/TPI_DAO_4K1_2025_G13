@@ -1,4 +1,4 @@
-import mysql.connector
+import pymysql
 from datetime import datetime
 
 from BACK.modelos.Alquiler import Alquiler
@@ -78,7 +78,7 @@ class AlquilerManager:
             conn.commit()
             return alquiler
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al guardar alquiler: {e}")
             conn.rollback()
             return None
@@ -91,14 +91,14 @@ class AlquilerManager:
     # ----------------------------------------------------------
     def obtener_por_id(self, id_alquiler):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("SELECT * FROM ALQUILER WHERE ID_ALQUILER = %s", (id_alquiler,))
             row = cursor.fetchone()
             return self.__row_to_alquiler(row)
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al obtener alquiler: {e}")
             return None
         finally:
@@ -110,14 +110,14 @@ class AlquilerManager:
     # ----------------------------------------------------------
     def listar_todos(self):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("SELECT * FROM ALQUILER")
             rows = cursor.fetchall()
             return [self.__row_to_alquiler(row) for row in rows]
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al listar alquileres: {e}")
             return []
         finally:
@@ -163,7 +163,7 @@ class AlquilerManager:
             conn.commit()
             return cursor.rowcount > 0
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al actualizar alquiler: {e}")
             conn.rollback()
             return False
@@ -204,7 +204,7 @@ class AlquilerManager:
             conn.commit()
             return cursor.rowcount > 0
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al cancelar alquiler: {e}")
             conn.rollback()
             return False
@@ -217,14 +217,14 @@ class AlquilerManager:
     # ----------------------------------------------------------
     def listar_por_cliente(self, id_cliente):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("SELECT * FROM ALQUILER WHERE ID_CLIENTE = %s", (id_cliente,))
             rows = cursor.fetchall()
             return [self.__row_to_alquiler(row) for row in rows]
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al listar alquileres por cliente: {e}")
             return []
         finally:

@@ -1,4 +1,4 @@
-import mysql.connector
+import pymysql
 from BACK.modelos.TipoMantenimiento import TipoMantenimiento
 from ..db_conection import DBConnection
 
@@ -26,7 +26,7 @@ class TipoMantenimientoManager:
     # ----------------------------------------------------------
     def obtener_por_id(self, id_tipo_mantenimiento):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("""
@@ -38,7 +38,7 @@ class TipoMantenimientoManager:
             row = cursor.fetchone()
             return self.__row_to_tipo_mantenimiento(row)
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al obtener tipo de mantenimiento: {e}")
             return None
         
@@ -51,14 +51,14 @@ class TipoMantenimientoManager:
     # ----------------------------------------------------------
     def listar_todos(self):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("SELECT * FROM TIPO_MANTENIMIENTO")
             rows = cursor.fetchall()
             return [self.__row_to_tipo_mantenimiento(row) for row in rows]
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al listar tipos de mantenimiento: {e}")
             return []
 

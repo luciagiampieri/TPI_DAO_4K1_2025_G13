@@ -1,4 +1,4 @@
-import mysql.connector
+import pymysql
 from datetime import datetime
 
 from BACK.modelos.Mantenimiento import Mantenimiento
@@ -75,7 +75,7 @@ class MantenimientoManager:
             conn.commit()
             return mantenimiento
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al guardar mantenimiento: {e}")
             conn.rollback()
             return None
@@ -89,7 +89,7 @@ class MantenimientoManager:
     # ----------------------------------------------------------
     def obtener_por_id(self, id_mantenimiento):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("""
@@ -124,7 +124,7 @@ class MantenimientoManager:
             conn.commit()
             return cursor.rowcount > 0
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al finalizar mantenimiento: {e}")
             conn.rollback()
             return False

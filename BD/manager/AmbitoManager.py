@@ -1,4 +1,4 @@
-import mysql.connector
+import pymysql
 from BACK.modelos.Ambito import Ambito
 from ..db_conection import DBConnection
 
@@ -26,7 +26,7 @@ class AmbitoManager:
     # ----------------------------------------------------------
     def obtener_por_id(self, id_ambito):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("""
@@ -38,7 +38,7 @@ class AmbitoManager:
             row = cursor.fetchone()
             return self.__row_to_ambito(row)
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al obtener ámbito: {e}")
             return None
 
@@ -51,7 +51,7 @@ class AmbitoManager:
     # ----------------------------------------------------------
     def listar_todos(self):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("""
@@ -62,7 +62,7 @@ class AmbitoManager:
             rows = cursor.fetchall()
             return [self.__row_to_ambito(row) for row in rows]
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al listar ámbitos: {e}")
             return []
 

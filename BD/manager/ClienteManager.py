@@ -1,4 +1,4 @@
-import mysql.connector
+import pymysql
 from BACK.modelos.Cliente import Cliente
 from ..db_conection import DBConnection
 
@@ -37,11 +37,11 @@ class ClienteManager:
             conn.commit()
             return cliente
 
-        except mysql.connector.IntegrityError:
+        except pymysql.err.IntegrityError:
             print(f"Error: Ya existe un cliente con el DNI {cliente.dni}.")
             return None
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al guardar el cliente: {e}")
             conn.rollback()
             return None
@@ -53,14 +53,14 @@ class ClienteManager:
     # --- 2. Obtener por ID (SELECT) ---
     def obtener_por_id(self, id_cliente):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("SELECT * FROM CLIENTE WHERE ID_CLIENTE = %s", (id_cliente,))
             row = cursor.fetchone()
             return self.__row_to_cliente(row)
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al obtener cliente: {e}")
             return None
 
@@ -71,14 +71,14 @@ class ClienteManager:
     # --- 3. Listar todos (SELECT *) ---
     def listar_todos(self):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("SELECT * FROM CLIENTE")
             rows = cursor.fetchall()
             return [self.__row_to_cliente(row) for row in rows]
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al listar clientes: {e}")
             return []
 
@@ -101,11 +101,11 @@ class ClienteManager:
             conn.commit()
             return cursor.rowcount > 0  # True si modificó algo
 
-        except mysql.connector.IntegrityError:
+        except pymysql.err.IntegrityError:
             print(f"Error: Ya existe un cliente con el DNI {cliente.dni}.")
             return False
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al actualizar el cliente: {e}")
             conn.rollback()
             return False

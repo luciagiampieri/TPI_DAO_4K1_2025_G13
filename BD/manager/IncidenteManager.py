@@ -1,4 +1,4 @@
-import mysql.connector
+import pymysql
 from datetime import datetime
 
 from BACK.modelos.Incidente import Incidente
@@ -68,7 +68,7 @@ class IncidenteManager:
             conn.commit()
             return incidente
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al guardar incidente: {e}")
             conn.rollback()
             return None
@@ -82,7 +82,7 @@ class IncidenteManager:
     # ----------------------------------------------------------
     def obtener_por_id(self, id_incidente):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("""
@@ -103,7 +103,7 @@ class IncidenteManager:
     # ----------------------------------------------------------
     def listar_todos(self):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("SELECT * FROM INCIDENTE")
@@ -144,7 +144,7 @@ class IncidenteManager:
             conn.commit()
             return cursor.rowcount > 0
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al actualizar incidente: {e}")
             conn.rollback()
             return False

@@ -1,4 +1,4 @@
-import mysql.connector
+import pymysql
 from BACK.modelos.Categoria import Categoria
 from ..db_conection import DBConnection
 
@@ -24,7 +24,7 @@ class CategoriaManager:
     # ----------------------------------------------------------
     def obtener_por_id(self, id_categoria):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("""
@@ -36,7 +36,7 @@ class CategoriaManager:
             row = cursor.fetchone()
             return self.__row_to_categoria(row)
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al obtener categoría: {e}")
             return None
 
@@ -49,7 +49,7 @@ class CategoriaManager:
     # ----------------------------------------------------------
     def listar_todos(self):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("""
@@ -60,7 +60,7 @@ class CategoriaManager:
             rows = cursor.fetchall()
             return [self.__row_to_categoria(row) for row in rows]
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al listar categorías: {e}")
             return []
 

@@ -1,4 +1,4 @@
-import mysql.connector
+import pymysql
 from BACK.modelos.Empleado import Empleado
 from ..db_conection import DBConnection
 
@@ -40,7 +40,7 @@ class EmpleadoManager:
             conn.commit()
             return empleado
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al guardar el empleado: {e}")
             conn.rollback()
             return None
@@ -54,7 +54,7 @@ class EmpleadoManager:
     # ----------------------------------------------------------
     def obtener_por_id(self, id_empleado):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("""
@@ -66,7 +66,7 @@ class EmpleadoManager:
             row = cursor.fetchone()
             return self.__row_to_empleado(row)
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al obtener empleado: {e}")
             return None
 
@@ -79,14 +79,14 @@ class EmpleadoManager:
     # ----------------------------------------------------------
     def listar_todos(self):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("SELECT * FROM EMPLEADO")
             rows = cursor.fetchall()
             return [self.__row_to_empleado(row) for row in rows]
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al listar empleados: {e}")
             return []
 
@@ -115,7 +115,7 @@ class EmpleadoManager:
             conn.commit()
             return cursor.rowcount > 0
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al actualizar empleado: {e}")
             conn.rollback()
             return False
@@ -140,7 +140,7 @@ class EmpleadoManager:
             conn.commit()
             return cursor.rowcount > 0
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al eliminar empleado: {e}")
             conn.rollback()
             return False

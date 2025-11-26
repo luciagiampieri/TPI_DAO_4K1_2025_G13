@@ -1,4 +1,4 @@
-import mysql.connector
+import pymysql
 from BACK.modelos.Vehiculo import Vehiculo
 from ..db_conection import DBConnection
 from .EstadoManager import EstadoManager
@@ -56,7 +56,7 @@ class VehiculoManager:
             conn.commit()
             return vehiculo
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al guardar el vehículo: {e}")
             conn.rollback()
             return None
@@ -70,7 +70,7 @@ class VehiculoManager:
     # ----------------------------------------------------------
     def obtener_por_id(self, id_vehiculo):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("""
@@ -82,7 +82,7 @@ class VehiculoManager:
             row = cursor.fetchone()
             return self.__row_to_vehiculo(row)
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al obtener vehículo: {e}")
             return None
 
@@ -95,7 +95,7 @@ class VehiculoManager:
     # ----------------------------------------------------------
     def listar_todos(self):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("SELECT * FROM VEHICULO")
@@ -138,7 +138,7 @@ class VehiculoManager:
             conn.commit()
             return cursor.rowcount > 0
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al actualizar vehículo: {e}")
             conn.rollback()
             return False
@@ -166,7 +166,7 @@ class VehiculoManager:
             conn.commit()
             return cursor.rowcount > 0
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al eliminar vehículo: {e}")
             conn.rollback()
             return False
@@ -192,7 +192,7 @@ class VehiculoManager:
             conn.commit()
             return cursor.rowcount > 0
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al actualizar estado del vehículo: {e}")
             conn.rollback()
             return False

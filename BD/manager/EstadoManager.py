@@ -1,4 +1,4 @@
-import mysql.connector
+import pymysql
 from BACK.modelos.Estado import Estado
 from ..db_conection import DBConnection
 from .AmbitoManager import AmbitoManager
@@ -32,7 +32,7 @@ class EstadoManager:
     # ----------------------------------------------------------
     def obtener_por_id(self, id_estado):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("""
@@ -44,7 +44,7 @@ class EstadoManager:
             row = cursor.fetchone()
             return self.__row_to_estado(row)
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al obtener estado: {e}")
             return None
 
@@ -57,7 +57,7 @@ class EstadoManager:
     # ----------------------------------------------------------
     def listar_todos(self):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("""
@@ -68,7 +68,7 @@ class EstadoManager:
             rows = cursor.fetchall()
             return [self.__row_to_estado(row) for row in rows]
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al listar estados: {e}")
             return []
 
@@ -78,7 +78,7 @@ class EstadoManager:
 
     def listar_por_ambito(self, ambito_id):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("""
@@ -90,7 +90,7 @@ class EstadoManager:
             rows = cursor.fetchall()
             return [self.__row_to_estado(row) for row in rows]
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al listar estados por ámbito: {e}")
             return []
 

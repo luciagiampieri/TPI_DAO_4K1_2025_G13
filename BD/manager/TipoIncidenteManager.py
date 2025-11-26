@@ -1,4 +1,4 @@
-import mysql.connector
+import pymysql
 from BACK.modelos.TipoIncidente import TipoIncidente
 from ..db_conection import DBConnection
 
@@ -26,7 +26,7 @@ class TipoIncidenteManager:
     # ----------------------------------------------------------
     def obtener_por_id(self, id_tipo_incidente):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("""
@@ -38,7 +38,7 @@ class TipoIncidenteManager:
             row = cursor.fetchone()
             return self.__row_to_tipo_incidente(row)
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al obtener tipo de incidente: {e}")
             return None
         
@@ -51,14 +51,14 @@ class TipoIncidenteManager:
     # ----------------------------------------------------------
     def listar_todos(self):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("SELECT * FROM TIPO_INCIDENTE")
             rows = cursor.fetchall()
             return [self.__row_to_tipo_incidente(row) for row in rows]
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al listar tipos de incidente: {e}")
             return []
         

@@ -1,5 +1,5 @@
-import mysql.connector
-from mysql.connector import errorcode
+import pymysql
+from pymysql.cursors import DictCursor
 
 class DBConnection:
     
@@ -15,12 +15,14 @@ class DBConnection:
     def get_connection(self):
         """Retorna una conexión activa a la base de datos MySQL."""
         try:
-            conn = mysql.connector.connect(**self.config)
+            conn = pymysql.connect(
+                **self.config, 
+                cursorclass=DictCursor)
             return conn
-        except mysql.connector.Error as err:
-            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        except pymysql.MySQLError as err:
+            if err.args[0] == pymysql.constants.ER.ACCESS_DENIED_ERROR:
                 print("Error: Usuario o contraseña incorrectos.")
-            elif err.errno == errorcode.ER_BAD_DB_ERROR:
+            elif err.args[0] == pymysql.constants.ER.BAD_DB_ERROR:
                 print("Error: La base de datos no existe.")
             else:
                 print(f"Error de conexión a MySQL: {err}")
@@ -39,7 +41,7 @@ class DBConnection:
                         pass
                 conn.commit()
                 print("Esquema MySQL creado/actualizado correctamente.")
-            except mysql.connector.Error as err:
+            except pymysql.MySQLError as err:
                 print(f"Error al ejecutar script SQL: {err}")
                 conn.rollback()
             finally:

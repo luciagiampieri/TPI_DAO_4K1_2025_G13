@@ -1,4 +1,4 @@
-import mysql.connector
+import pymysql
 from BACK.modelos.CaracteristicaVehiculo import CaracteristicaVehiculo
 from ..db_conection import DBConnection
 from .CategoriaManager import CategoriaManager
@@ -47,7 +47,7 @@ class CaracteristicaVehiculoManager:
             conn.commit()
             return caracteristica
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Error al guardar CaracteristicaVehiculo: {e}")
             conn.rollback()
             return None
@@ -61,7 +61,7 @@ class CaracteristicaVehiculoManager:
     # ----------------------------------------------------------
     def obtener_por_id(self, id_caracteristica):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("""
@@ -82,7 +82,7 @@ class CaracteristicaVehiculoManager:
     # ----------------------------------------------------------
     def listar_todos(self):
         conn = self.db_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         try:
             cursor.execute("SELECT * FROM DETALLE_VEHICULO")
