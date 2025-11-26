@@ -2,7 +2,7 @@
 
 from datetime import datetime
 # Importamos todas las clases de dominio que vamos a usar
-from BACK.modelos import Cliente, Vehiculo, Alquiler, Empleado, Estado
+from modelos import Cliente, Vehiculo, Alquiler, Empleado, Estado
 # Importamos todos los Managers necesarios para la orquestación
 from ..BD.manager import CaracteristicaVehiculoManager, ClienteManager, VehiculoManager, AlquilerManager, EmpleadoManager, EstadoManager, MantenimientoManager, IncidenteManager, TipoIncidenteManager, AmbitoManager, CategoriaManager, TipoMantenimientoManager
 

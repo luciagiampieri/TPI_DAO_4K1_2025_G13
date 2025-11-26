@@ -1,5 +1,5 @@
-from Estado import Estado
-from Vehiculo import Vehiculo
+from .Estado import Estado
+from .Vehiculo import Vehiculo
 
 class Alquiler:
 

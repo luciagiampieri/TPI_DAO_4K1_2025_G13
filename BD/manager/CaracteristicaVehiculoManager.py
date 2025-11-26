@@ -1,8 +1,8 @@
 import sqlite3
-from BACK.modelos import CaracteristicaVehiculo, Categoria 
-from BD.manager import CategoriaManager
-from db_conection import DBConnection
-from CategoriaManager import CategoriaManager
+from ...BACK.modelos import CaracteristicaVehiculo, Categoria 
+from ..manager import CategoriaManager
+from ..db_conection import DBConnection
+from .CategoriaManager import CategoriaManager
 
 
 class CaracteristicaVehiculoManager:
