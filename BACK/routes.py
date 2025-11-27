@@ -1,8 +1,11 @@
-from flask import Flask, app, request, jsonify 
+from flask import Flask, app, request, jsonify
+
+from BACK.GestorReportes import GestorReportes 
 from .SistemaDeAlquiler import SistemaDeAlquiler
 from datetime import datetime
 
 sistema = SistemaDeAlquiler()
+gestor_reportes = GestorReportes()
 app = Flask(__name__)
 
 @app.route('/api/clientes', methods=['GET'])
@@ -410,6 +413,44 @@ def modificar_mantenimiento(id_mantenimiento):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+# --- RUTAS DE REPORTES  ---
+
+@app.route('/api/reportes/ranking', methods=['GET'])
+def reporte_ranking():
+    data = gestor_reportes.obtener_ranking_vehiculos()
+    return jsonify(data)
+
+@app.route('/api/reportes/facturacion/<int:anio>', methods=['GET'])
+def reporte_facturacion(anio):
+    data = gestor_reportes.obtener_facturacion_anual(anio)
+    return jsonify(data)
+
+@app.route('/api/reportes/cliente/<int:id_cliente>', methods=['GET'])
+def reporte_cliente(id_cliente):
+    data = gestor_reportes.obtener_historial_cliente(id_cliente)
+    for d in data:
+        if d['FEC_INICIO']: d['FEC_INICIO'] = d['FEC_INICIO'].strftime('%Y-%m-%d')
+        if d['FEC_FIN']: d['FEC_FIN'] = d['FEC_FIN'].strftime('%Y-%m-%d')
+    return jsonify(data)
+
+@app.route('/api/reportes/periodo', methods=['POST'])
+def reporte_periodo():
+    """Reporte de alquileres filtrados por rango de fechas."""
+    body = request.get_json()
+    
+    if not body or 'desde' not in body or 'hasta' not in body:
+        return jsonify({"error": "Faltan parámetros 'desde' y 'hasta'"}), 400
+
+    data = gestor_reportes.obtener_reporte_periodo(body['desde'], body['hasta'])
+    
+    for d in data: 
+        if d.get('FEC_INICIO'): 
+            d['FEC_INICIO'] = d['FEC_INICIO'].strftime('%Y-%m-%d %H:%M')
+        if d.get('FEC_FIN'): 
+            d['FEC_FIN'] = d['FEC_FIN'].strftime('%Y-%m-%d %H:%M')
+        
+    return jsonify(data)
 
 
 if __name__ == '__main__':
