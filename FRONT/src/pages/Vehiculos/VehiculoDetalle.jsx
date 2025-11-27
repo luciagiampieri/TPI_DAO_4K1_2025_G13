@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getVehiculoById, getMantenimientosByVehiculo } from '../../services/vehiculoService';
+import { getTiposMantenimiento, crearMantenimiento, actualizarMantenimiento, eliminarMantenimiento } from '../../services/mantenimientoService';
+import Swal from 'sweetalert2';
 import { ArrowLeftIcon, WrenchScrewdriverIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/solid";
 
 const VehiculoDetalle = () => {
     const { id } = useParams(); // Obtiene el ID de la URL
     const navigate = useNavigate();
-    
+
     const [vehiculo, setVehiculo] = useState(null);
     const [mantenimientos, setMantenimientos] = useState([]);
+    const [tiposMant, setTiposMant] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     // Estados del Modal
@@ -17,63 +20,98 @@ const VehiculoDetalle = () => {
     const [formData, setFormData] = useState({
         id_mantenimiento: null,
         id_tipo: '',
+        tipo: '',
         fecha_inicio: '',
         fecha_fin: '',
         costo: '',
-        observacion: ''
+        observacion: '',
     });
 
     const loadData = async () => {
-            try {
-                const [vehData, mantData] = await Promise.all([
-                    getVehiculoById(id),
-                    getMantenimientosByVehiculo(id)
-                ]);
-                setVehiculo(vehData);
-                setMantenimientos(mantData);
-            } catch (error) {
-                console.error("Error cargando detalles:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+        try {
+            const [vehData, mantData, tiposMantData] = await Promise.all([
+                getVehiculoById(id),
+                getMantenimientosByVehiculo(id),
+                getTiposMantenimiento()
+            ]);
+            setVehiculo(vehData);
+            setMantenimientos(mantData);
+            setTiposMant(tiposMantData);
+        } catch (error) {
+            console.error("Error cargando detalles:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
         loadData();
     }, [id]);
 
     const openModalNew = () => {
-        setFormData({ 
-            id_mantenimiento: null, id_tipo: '', fecha_inicio: '', 
-            fecha_fin: '', costo: '', observacion: '' 
+        setFormData({
+            id_mantenimiento: null, id_tipo: '', fecha_inicio: '',
+            fecha_fin: '', costo: '', observacion: ''
         });
         setIsEditing(false);
         setModalVisible(true);
     };
 
+    const formatDateForInput = (dateString) => {
+        if (!dateString || dateString === 'En curso') return '';
+        return dateString.split(' ')[0];
+    };
+
     const openModalEdit = (m) => {
+        console.log("Datos a editar:", m); // Para depurar
+
         setFormData({
             id_mantenimiento: m.id,
-            id_tipo: m.id_tipo, // Asegúrate de que el backend devuelva este ID
-            fecha_inicio: m.fecha_inicio, // YYYY-MM-DD
-            fecha_fin: m.fecha_fin === 'En curso' ? '' : m.fecha_fin,
+            id_tipo: m.id_tipo,
+            tipo: m.tipo_mantenimiento, 
+            fecha_inicio: formatDateForInput(m.fecha_inicio),
+            fecha_fin: formatDateForInput(m.fecha_fin),
+            
             costo: m.costo || '',
-            observacion: m.observacion || ''
+            observacion: m.observacion || '' 
         });
+        
         setIsEditing(true);
         setModalVisible(true);
     };
 
     const handleInputChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+
+        setFormData(prev => {
+            let newData = { ...prev, [name]: value,};
+
+            // LÓGICA NUEVA: Si cambiamos el select de "Tipo", buscamos el nombre
+            if (name === 'id_tipo') {
+            // Buscamos el objeto completo en el array de tipos
+            const tipoSeleccionado = tiposMant.find(t => t.id === parseInt(value));
+            if (tipoSeleccionado) {
+                newData.tipo = tipoSeleccionado.nombre;
+            } else {
+                newData.tipo = '';
+            }
+            }
+
+            return newData;
+        });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const payload = { ...formData, id_vehiculo: id }; // ID del vehículo actual
+            // Creamos el payload asegurando que 'id_vehiculo' esté presente
+            const payload = { 
+                ...formData, 
+                id_vehiculo: id // <--- ESTA ES LA CLAVE (viene del useParams)
+            }; 
             
             if (isEditing) {
+                // Ahora 'payload' lleva el id_vehiculo al endpoint PUT
                 await actualizarMantenimiento(formData.id_mantenimiento, payload);
                 Swal.fire('Actualizado', 'Mantenimiento actualizado.', 'success');
             } else {
@@ -81,21 +119,21 @@ const VehiculoDetalle = () => {
                 Swal.fire('Creado', 'Mantenimiento iniciado.', 'success');
             }
             setModalVisible(false);
-            loadData(); // Recarga todo para ver cambios de estado en vehículo
+            loadData(); 
         } catch (error) {
             Swal.fire('Error', 'Hubo un problema.', 'error');
         }
     };
 
-    const handleDelete = async (idMant) => {
+    const handleDelete = async (idMant, idVehiculo) => {
         const result = await Swal.fire({
             title: '¿Eliminar registro?', icon: 'warning', showCancelButton: true,
             confirmButtonText: 'Sí, eliminar', confirmButtonColor: '#d33'
         });
-        
+
         if (result.isConfirmed) {
             try {
-                await eliminarMantenimiento(idMant);
+                await eliminarMantenimiento(idMant, idVehiculo);
                 Swal.fire('Eliminado', '', 'success');
                 loadData();
             } catch (error) {
@@ -160,13 +198,13 @@ const VehiculoDetalle = () => {
                                             <span className="text-orange-600 font-bold text-xs bg-orange-100 px-2 py-1 rounded-full">En Curso</span>
                                         ) : m.fecha_fin}
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-gray-800">{m.tipo}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-800">{m.tipo_mantenimiento}</td>
                                     <td className="px-6 py-4 text-sm text-gray-900 font-bold">{m.costo ? `$${m.costo}` : '-'}</td>
                                     <td className="px-6 py-4 text-sm flex space-x-3">
                                         <button onClick={() => openModalEdit(m)} className="text-blue-600 hover:text-blue-900" title="Editar / Finalizar">
                                             <PencilSquareIcon className="h-5 w-5" />
                                         </button>
-                                        <button onClick={() => handleDelete(m.id)} className="text-red-600 hover:text-red-900" title="Eliminar">
+                                        <button onClick={() => handleDelete(m.id, vehiculo.id)} className="text-red-600 hover:text-red-900" title="Eliminar">
                                             <TrashIcon className="h-5 w-5" />
                                         </button>
                                     </td>
@@ -183,7 +221,7 @@ const VehiculoDetalle = () => {
                     <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md">
                         <h3 className="text-xl font-bold mb-4">{isEditing ? 'Editar / Finalizar' : 'Nuevo Mantenimiento'}</h3>
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            
+
                             {/* Solo mostrar tipo y fecha inicio al crear (o si quieres permitir editar todo, déjalo siempre) */}
                             <div>
                                 <label className="block text-sm text-gray-700">Tipo</label>

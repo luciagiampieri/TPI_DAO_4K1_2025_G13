@@ -52,11 +52,6 @@ class MantenimientoManager:
         cursor = conn.cursor()
 
         try:
-            fec_inicio_str = mantenimiento.fecha_inicio.strftime("%Y-%m-%d %H:%M:%S")
-            fec_fin_str = (
-                mantenimiento.fecha_fin.strftime("%Y-%m-%d %H:%M:%S")
-                if mantenimiento.fecha_fin else None
-            )
 
             cursor.execute("""
                 INSERT INTO MANTENIMIENTO 
@@ -65,8 +60,8 @@ class MantenimientoManager:
             """, (
                 mantenimiento.vehiculo.id_vehiculo,
                 mantenimiento.tipo_mantenimiento.id_tipo_mantenimiento,
-                fec_inicio_str,
-                fec_fin_str,
+                mantenimiento.fecha_inicio,
+                mantenimiento.fecha_fin,
                 mantenimiento.costo,
                 mantenimiento.observacion
             ))

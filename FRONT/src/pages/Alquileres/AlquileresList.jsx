@@ -122,11 +122,13 @@ const AlquileresList = () => {
                                     <label className="block text-sm font-medium text-gray-700">Vehículo</label>
                                     <select name="vehiculoId" value={nuevoAlquiler.vehiculoId} onChange={handleInputChange} required className="mt-1 block w-full p-2 border border-gray-300 rounded-md">
                                         <option value="">Seleccione Vehículo</option>
-                                        {vehiculos.map(v => (
-                                            <option key={v.id} value={v.id}>
-                                                {v.patente} - {v.modelo} (${v.costo_diario}/día)
-                                            </option>
-                                        ))}
+                                        {vehiculos
+                                            .filter(v => v.estado === 'Disponible' || v.estado === 'DISPONIBLE') 
+                                            .map(v => (
+                                                <option key={v.id} value={v.id}>
+                                                    {v.patente} - {v.modelo} (${v.costo_diario}/día)
+                                                </option>
+                                            ))}
                                     </select>
                                 </div>
                             </div>

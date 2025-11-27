@@ -314,6 +314,7 @@ def listar_mantenimientos_vehiculo(id_vehiculo):
     data = [{
         'id': m.id_mantenimiento,
         'vehiculo': m.vehiculo.patente + ' - ' + m.vehiculo.caracteristica_vehiculo.modelo,
+        'id_tipo': m.tipo_mantenimiento.id_tipo_mantenimiento,
         'tipo_mantenimiento': m.tipo_mantenimiento.tipo_mantenimiento,
         'fecha_inicio': m.fecha_inicio.strftime('%Y-%m-%d %H:%M'),
         'fecha_fin': m.fecha_fin.strftime('%Y-%m-%d %H:%M') if m.fecha_fin else None,
@@ -324,9 +325,9 @@ def listar_mantenimientos_vehiculo(id_vehiculo):
     return jsonify(data)
 
 #liminar un mantenimiento
-@app.route('/api/mantenimientos/<int:id_mantenimiento>', methods=['DELETE'])
-def eliminar_mantenimiento(id_mantenimiento):
-    exito = sistema.eliminar_mantenimiento(id_mantenimiento)
+@app.route('/api/mantenimientos/<int:id_mantenimiento>/<int:id_vehiculo>', methods=['DELETE'])
+def eliminar_mantenimiento(id_mantenimiento, id_vehiculo):
+    exito = sistema.eliminar_mantenimiento(id_mantenimiento, id_vehiculo)
     
     if exito:
         return jsonify({"mensaje": "Mantenimiento eliminado correctamente."}), 200
@@ -339,19 +340,22 @@ def crear_mantenimiento():
     data = request.get_json()
     
     try:
-        f_inicio = datetime.strptime(data['fechaInicio'], '%Y-%m-%dT%H:%M')
-        f_fin = (
-            datetime.strptime(data['fechaFin'], '%Y-%m-%dT%H:%M') 
-            if data.get('fechaFin') else None
-        )
+        f_inicio = datetime.strptime(data['fecha_inicio'], '%Y-%m-%d')
+        f_fin = None
+        if data.get('fecha_fin') and data['fecha_fin'].strip():
+             f_fin = datetime.strptime(data['fecha_fin'], '%Y-%m-%d')
+
+        costo_str = data.get('costo', '')
+        costo = float(costo_str) if costo_str and costo_str.strip() else 0.0
         
         mantenimiento = sistema.registrar_mantenimiento(
-            int(data['vehiculoId']),
-            int(data['tipo_mantenimiento_id']),
+            int(data['id_vehiculo']),
+            int(data['id_tipo']),
+            data['tipo'],
             f_inicio,
             f_fin,
-            float(data['costo']),
-            data.get('descripcion', '')
+            costo,
+            data['observacion']
         )
         
         if mantenimiento:
@@ -370,10 +374,44 @@ def listar_tipos_mantenimiento():
     
     data = [{
         'id': t.id_tipo_mantenimiento,
-        'tipo_mantenimiento': t.tipo_mantenimiento
+        'nombre': t.tipo_mantenimiento
     } for t in tipos]
     
     return jsonify(data)
+
+@app.route('/api/mantenimientos/<int:id_mantenimiento>', methods=['PUT'])
+def modificar_mantenimiento(id_mantenimiento):
+    data = request.get_json()
+    
+    try:
+        f_inicio = datetime.strptime(data['fecha_inicio'], '%Y-%m-%d')
+        f_fin = None
+        if data.get('fecha_fin') and data['fecha_fin'].strip():
+             f_fin = datetime.strptime(data['fecha_fin'], '%Y-%m-%d')
+
+        costo_str = data.get('costo', '')
+        costo = float(costo_str) if costo_str and costo_str.strip() else 0.0
+        
+        mantenimiento_modificado = sistema.modificar_mantenimiento(
+            id_mantenimiento,
+            int(data['id_vehiculo']),
+            int(data['id_tipo']),
+            data['tipo'],
+            f_inicio,
+            f_fin,
+            costo,
+            data['observacion']
+        )
+        
+        if mantenimiento_modificado:
+            return jsonify({"mensaje": "Mantenimiento modificado con éxito"}), 200
+        else:
+            return jsonify({"error": "No se pudo modificar el mantenimiento."}), 400
+            
+    except ValueError as e:
+        return jsonify({"error": f"Error de formato de fecha o costo: {str(e)}"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # --- RUTAS DE REPORTES  ---
