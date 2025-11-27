@@ -136,7 +136,7 @@ class VehiculoManager:
             ))
 
             conn.commit()
-            return cursor.rowcount > 0
+            return True
 
         except pymysql.MySQLError as e:
             print(f"Error al actualizar vehículo: {e}")

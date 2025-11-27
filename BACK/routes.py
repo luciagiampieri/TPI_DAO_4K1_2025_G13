@@ -37,6 +37,24 @@ def alta_cliente():
     return jsonify({"error": "No se pudo crear el cliente."}), 400
 
 
+@app.route('/api/clientes/<int:id_cliente>', methods=['PUT'])
+def actualizar_cliente(id_cliente):
+    data = request.get_json()
+
+    cliente_mod = sistema.modificar_cliente(id_cliente, data)
+
+    if cliente_mod:
+        return jsonify({
+            "id": id_cliente,
+            "nombre": data.get("nombre"),
+            "dni": data.get("dni"),
+            "telefono": data.get("telefono"),
+            "mail": data.get("mail")
+        }), 200
+
+    return jsonify({"error": "No se pudo actualizar el cliente."}), 400
+
+
 @app.route('/api/categoria', methods=['GET'])
 def listar_categorias():
     """Endpoint para obtener las categorías de vehículos (tabla lookup)."""
@@ -120,6 +138,28 @@ def eliminar_vehiculo(id_vehiculo):
         return jsonify({"mensaje": "Vehículo eliminado correctamente."}), 200
     else:
         return jsonify({"error": "No se pudo eliminar el vehículo."}), 400
+    
+
+@app.route('/api/vehiculos/<int:id_vehiculo>', methods=['PUT'])
+def actualizar_vehiculo(id_vehiculo):
+    data = request.get_json()
+
+    veh_mod = sistema.modificar_vehiculo(id_vehiculo, data)
+
+    if veh_mod:
+        return jsonify({
+            "id": veh_mod.id_vehiculo,
+            "patente": veh_mod.patente,
+            "kilometraje": veh_mod.kilometraje,
+            "costo_diario": veh_mod.costo_diario,
+            "estado": veh_mod.estado.estado,
+            "modelo": veh_mod.caracteristica_vehiculo.modelo,
+            "anio": veh_mod.caracteristica_vehiculo.anio,
+            "categoria": veh_mod.caracteristica_vehiculo.categoria.categoria
+        }), 200
+
+    return jsonify({"error": "No se pudo actualizar el vehículo."}), 400
+
 
 
 if __name__ == '__main__':

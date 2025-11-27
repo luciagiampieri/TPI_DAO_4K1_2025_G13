@@ -22,7 +22,7 @@ class CaracteristicaVehiculoManager:
         return CaracteristicaVehiculo(
             id_caracteristica=row['ID_DETALLE_VEHICULO'],
             modelo=row['MODELO'],
-            anio=row['ANIO'],          # TUVE QUE CAMBIAR A ANIO PORQUE NO ANDABA
+            anio=row['AÑO'],      # <- acá usamos AÑO tal cual está en la tabla
             categoria=categoria_obj
         )
 
@@ -35,7 +35,7 @@ class CaracteristicaVehiculoManager:
 
         try:
             cursor.execute("""
-                INSERT INTO DETALLE_VEHICULO (MODELO, AÑO, ID_CATEGORIA)
+                INSERT INTO DETALLE_VEHICULO (MODELO, `AÑO`, ID_CATEGORIA)
                 VALUES (%s, %s, %s)
             """, (
                 caracteristica.modelo,
@@ -93,11 +93,39 @@ class CaracteristicaVehiculoManager:
             cursor.close()
             conn.close()
 
-    def crear_detalle(self, modelo, anio, categoria):
-        nueva_caracteristica = CaracteristicaVehiculo(
-            id_caracteristica=None,
-            modelo=modelo,
-            anio=anio,
-            categoria=categoria
-        )
-        return self.guardar(nueva_caracteristica)
+    # ----------------------------------------------------------
+    # ACTUALIZAR REGISTRO
+    # ----------------------------------------------------------
+    def actualizar(self, caracteristica):
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+
+        print("ID A ACTUALIZAR:", caracteristica.id_caracteristica)
+
+        try:
+            cursor.execute("""
+                UPDATE DETALLE_VEHICULO
+                SET MODELO = %s,
+                    `AÑO` = %s,
+                    ID_CATEGORIA = %s
+                WHERE ID_DETALLE_VEHICULO = %s
+            """, (
+                caracteristica.modelo,
+                caracteristica.anio,
+                caracteristica.categoria.id_categoria,
+                caracteristica.id_caracteristica
+            ))
+
+            print("ROWCOUNT:", cursor.rowcount)  # <--- SUPER IMPORTANTE
+
+            conn.commit()
+            return True
+
+        except pymysql.MySQLError as e:
+            print(f"Error al actualizar detalle vehículo: {e}")
+            conn.rollback()
+            return False
+
+        finally:
+            cursor.close()
+            conn.close()

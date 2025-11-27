@@ -39,3 +39,8 @@ export const eliminarVehiculo = async (idVehiculo) => {
     const response = await axios.delete(`${VEHICULOS_URL}/${idVehiculo}`); 
     return response.data;
 };
+
+export const actualizarVehiculo = async (idVehiculo, data) => {
+    const response = await axios.put(`${VEHICULOS_URL}/${idVehiculo}`, data);
+    return response.data;
+};
