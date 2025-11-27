@@ -212,3 +212,28 @@ class VehiculoManager:
         finally:
             cursor.close()
             conn.close()
+
+    def verificar_mantenimiento_activo(self, id_vehiculo):
+        """
+        Llama al SP para ver si el vehículo tiene un mantenimiento activo en este momento.
+        Retorna True si hay mantenimiento, False si no.
+        """
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor() # Ya viene configurado como DictCursor
+
+        try:
+            cursor.callproc('SP_VALIDAR_ESTADO_MANTENIMIENTO', (id_vehiculo,))
+            resultado = cursor.fetchone()
+            
+            if resultado:
+                return True
+            else:
+                return False
+
+        except Exception as e:
+            print(f"Error al ejecutar SP de validación: {e}")
+            return False # En caso de error, asumimos False o manejas la excepción
+            
+        finally:
+            cursor.close()
+            conn.close()

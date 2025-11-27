@@ -17,7 +17,7 @@ export const actualizarMantenimiento = async (id, data) => {
     return response.data;
 };
 
-export const eliminarMantenimiento = async (id) => {
-    const response = await axios.delete(`${API_URL}/${id}`);
+export const eliminarMantenimiento = async (id, id_vehiculo) => {
+    const response = await axios.delete(`${API_URL}/${id}/${id_vehiculo}`);
     return response.data;
 };
