@@ -6,13 +6,8 @@ import ClientesList from './pages/Clients/ClientesList';
 import VehiculosList from './pages/Vehiculos/VehiculosList';
 import AlquileresList from './pages/Alquileres/AlquileresList';
 import VehiculoDetalle from './pages/Vehiculos/VehiculoDetalle';
+import Reportes from './pages/Reports/Reportes';
 
-// Placeholder para páginas que aún no creamos
-const PaginaEnConstruccion = ({ titulo }) => (
-    <div className="p-10 text-center">
-        <h2 className="text-2xl font-bold text-gray-400">🚧 {titulo} en construcción 🚧</h2>
-    </div>
-);
 
 function App() {
     return (
@@ -24,7 +19,7 @@ function App() {
                 <Route path="/vehiculos" element={<VehiculosList />} />
                 <Route path="/vehiculos/:id" element={<VehiculoDetalle />} />
                 <Route path="/alquileres" element={<AlquileresList />} />
-                <Route path="/reportes" element={<PaginaEnConstruccion titulo="Reportes" />} />
+                <Route path="/reportes" element={<Reportes />} />
                 </Routes>
             </Layout>
         </BrowserRouter>

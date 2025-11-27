@@ -18,7 +18,7 @@ const Sidebar = () => {
         <div className="bg-slate-900 text-white w-64 min-h-screen flex flex-col transition-all duration-300">
             {/* Logo / Título */}
             <div className="h-16 flex items-center justify-center border-b border-slate-700">
-                <h1 className="text-2xl font-bold text-blue-500">RentCar<span className="text-white">App</span></h1>
+                <h1 className="text-2xl font-bold text-blue-500">Formula Car<span className="text-white">App</span></h1>
             </div>
 
             {/* Menú */}
