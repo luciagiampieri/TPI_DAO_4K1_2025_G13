@@ -34,8 +34,8 @@ class AlquilerManager:
         estado_obj = self.estado_manager.obtener_por_id(row['ID_ESTADO'])
 
         # Convertir fechas desde string MySQL
-        fec_inicio = datetime.strptime(row['FEC_INICIO'], '%Y-%m-%d %H:%M:%S')
-        fec_fin = datetime.strptime(row['FEC_FIN'], '%Y-%m-%d %H:%M:%S')
+        fec_inicio = row['FEC_INICIO']
+        fec_fin = row['FEC_FIN']
 
         return Alquiler(
             id_alquiler=row['ID_ALQUILER'],
@@ -227,6 +227,40 @@ class AlquilerManager:
         except pymysql.MySQLError as e:
             print(f"Error al listar alquileres por cliente: {e}")
             return []
+        finally:
+            cursor.close()
+            conn.close()
+
+    def listar_activo_por_vehiculo(self, id_vehiculo):
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("SELECT * FROM ALQUILER WHERE ID_VEHICULO = %s AND (ID_ESTADO = 7 OR ID_ESTADO = 6)", (id_vehiculo,))
+            rows = cursor.fetchall()
+            return [self.__row_to_alquiler(row) for row in rows]
+
+        except pymysql.MySQLError as e:
+            print(f"Error al listar alquileres por vehículo: {e}")
+            return []
+        finally:
+            cursor.close()
+            conn.close()
+
+
+    def eliminar(self, id_alquiler):
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("DELETE FROM ALQUILER WHERE ID_ALQUILER = %s", (id_alquiler,))
+            conn.commit()
+            return cursor.rowcount > 0
+
+        except pymysql.MySQLError as e:
+            print(f"Error al eliminar alquiler: {e}")
+            conn.rollback()
+            return False
         finally:
             cursor.close()
             conn.close()

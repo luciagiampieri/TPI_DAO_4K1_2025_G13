@@ -136,20 +136,29 @@ class SistemaDeAlquiler:
         if not alquiler or alquiler.estado.id_estado != 201: # 201 = Activo
             return False
 
-        # 1. LÓGICA DE NEGOCIO: El objeto Alquiler realiza la lógica de finalización
         alquiler.finalizar_alquiler(km_final) 
-        
-        # 2. Persistencia de la modificación del Alquiler (ID_ESTADO=202, COSTO_TOTAL, FEC_FIN)
         alquiler_actualizado = self.alquiler_manager.actualizar(alquiler)
-        
+
         if alquiler_actualizado:
-            # 3. LÓGICA DE NEGOCIO: Liberar vehículo (ID_ESTADO=101)
             self.vehiculo_manager.actualizar_estado(alquiler.vehiculo.id_vehiculo, 101) 
-            # 4. Persistencia: Actualizar kilometraje del vehículo (requiere método en VehiculoManager)
-            # self.vehiculo_manager.actualizar_kilometraje(alquiler.vehiculo.id_vehiculo, km_final)
             return True
-            
         return False
+    
+    def eliminar_alquiler(self, id_alquiler):
+        """Lógica de Eliminación de un Alquiler (si está en estado 'Activo')."""
+        alquiler = self.alquiler_manager.obtener_por_id(id_alquiler)
+        
+        if not alquiler:
+            print(f"❌ Alquiler {id_alquiler} no encontrado.")
+            return False
+        
+        if alquiler.estado.id_estado != 201: # 201 = Activo
+            print(f"❌ No se puede eliminar el alquiler {id_alquiler} porque no está activo.")
+            return False
+        
+        # Delegar la eliminación al Manager
+        return self.alquiler_manager.eliminar(id_alquiler)
+
 
     ## ---------------------------------------------
     ## REPORTES
@@ -225,11 +234,12 @@ class SistemaDeAlquiler:
             return False
         
         # LÓGICA DE NEGOCIO: Verificar que no tenga alquileres activos
-        # alquileres_activos = self.alquiler_manager.listar_alquileres_activos_por_vehiculo(id_vehiculo)
+        alquileres_activos = self.alquiler_manager.listar_por_vehiculo(id_vehiculo)
         
-        # if alquileres_activos:
-        #     print(f"❌ No se puede eliminar el vehículo {id_vehiculo} porque tiene alquileres activos.")
-        #     return False
+        if len(alquileres_activos) > 0:
+            print(f"❌ No se puede eliminar el vehículo {id_vehiculo} porque tiene alquileres activos.")
+            return False
         
-        # Delegar la eliminación al Manager
         return self.vehiculo_manager.eliminar(id_vehiculo)
+    
+

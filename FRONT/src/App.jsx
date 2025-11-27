@@ -4,6 +4,7 @@ import Dashboard from './pages/Home/Dashboard';
 import React from 'react';
 import ClientesList from './pages/Clients/ClientesList';
 import VehiculosList from './pages/Vehiculos/VehiculosList';
+import AlquileresList from './pages/Alquileres/AlquileresList';
 
 // Placeholder para páginas que aún no creamos
 const PaginaEnConstruccion = ({ titulo }) => (
@@ -20,7 +21,7 @@ function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/clientes" element={<ClientesList />} />
                 <Route path="/vehiculos" element={<VehiculosList />} />
-                <Route path="/alquileres" element={<PaginaEnConstruccion titulo="Alquileres" />} />
+                <Route path="/alquileres" element={<AlquileresList />} />
                 <Route path="/reportes" element={<PaginaEnConstruccion titulo="Reportes" />} />
                 </Routes>
             </Layout>

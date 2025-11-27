@@ -1,5 +1,6 @@
 from flask import Flask, app, request, jsonify 
 from .SistemaDeAlquiler import SistemaDeAlquiler
+from datetime import datetime
 
 sistema = SistemaDeAlquiler()
 app = Flask(__name__)
@@ -120,6 +121,123 @@ def eliminar_vehiculo(id_vehiculo):
         return jsonify({"mensaje": "Vehículo eliminado correctamente."}), 200
     else:
         return jsonify({"error": "No se pudo eliminar el vehículo."}), 400
+
+
+# --- RUTAS DE EMPLEADOS (Para el Dropdown) ---
+@app.route('/api/empleados', methods=['GET'])
+def listar_empleados():
+    empleados = sistema.empleado_manager.listar_todos()
+    
+    data = [{'id': e.id_empleado, 'nombre': e.nombre} for e in empleados]
+    return jsonify(data)
+
+
+# --- RUTAS DE ALQUILERES ---
+@app.route('/api/alquileres', methods=['GET'])
+def listar_alquileres():
+    alquileres = sistema.alquiler_manager.listar_todos()
+    
+    # Serializamos con datos anidados para mostrar nombres en la tabla
+    data = [{
+        'id': a.id_alquiler,
+        'vehiculo': a.vehiculo.patente + ' - ' + a.vehiculo.caracteristica_vehiculo.modelo,
+        'cliente': a.cliente.nombre,
+        'empleado': a.empleado.nombre,
+        'fecha_inicio': a.fecha_inicio.strftime('%Y-%m-%d %H:%M'),
+        'fecha_fin': a.fecha_fin.strftime('%Y-%m-%d %H:%M'),
+        'costo_total': a.costo_total,
+        'estado': a.estado.estado
+    } for a in alquileres]
+    
+    return jsonify(data)
+
+
+@app.route('/api/alquileres', methods=['POST'])
+def crear_alquiler():
+    data = request.get_json()
+    
+    try:
+        # Convertir strings de fecha (del JSON) a objetos datetime
+        f_inicio = datetime.strptime(data['fechaInicio'], '%Y-%m-%dT%H:%M')
+        f_fin = datetime.strptime(data['fechaFin'], '%Y-%m-%dT%H:%M')
+        
+        # Llamar a la lógica del sistema (que valida disponibilidad)
+        alquiler = sistema.registrar_alquiler(
+            int(data['vehiculoId']),
+            int(data['clienteId']),
+            int(data['empleadoId']),
+            f_inicio,
+            f_fin
+        )
+        
+        if alquiler:
+            return jsonify({"mensaje": "Alquiler registrado con éxito"}), 201
+        else:
+            return jsonify({"error": "No se pudo registrar. El vehículo podría no estar disponible."}), 400
+            
+    except ValueError as e:
+        return jsonify({"error": f"Error de formato de fecha: {str(e)}"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+#eliminar alquiler
+@app.route('/api/alquileres/<int:id_alquiler>', methods=['DELETE'])
+def eliminar_alquiler(id_alquiler):
+    exito = sistema.eliminar_alquiler(id_alquiler)
+    
+    if exito:
+        return jsonify({"mensaje": "Alquiler eliminado correctamente."}), 200
+    else:
+        return jsonify({"error": "No se pudo eliminar el alquiler."}), 400
+    
+#modificar alquiler
+@app.route('/api/alquileres/<int:id_alquiler>', methods=['PUT'])
+def modificar_alquiler(id_alquiler):
+    data = request.get_json()
+    
+    try:
+        f_inicio = datetime.strptime(data['fechaInicio'], '%Y-%m-%dT%H:%M')
+        f_fin = datetime.strptime(data['fechaFin'], '%Y-%m-%dT%H:%M')
+        
+        alquiler_modificado = sistema.modificar_alquiler(
+            id_alquiler,
+            int(data['vehiculoId']),
+            int(data['clienteId']),
+            int(data['empleadoId']),
+            f_inicio,
+            f_fin
+        )
+        
+        if alquiler_modificado:
+            return jsonify({"mensaje": "Alquiler modificado con éxito"}), 200
+        else:
+            return jsonify({"error": "No se pudo modificar el alquiler."}), 400
+            
+    except ValueError as e:
+        return jsonify({"error": f"Error de formato de fecha: {str(e)}"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+#finalizar alquiler
+@app.route('/api/alquileres/finalizar/<int:id_alquiler>', methods=['POST'])
+def finalizar_alquiler(id_alquiler):
+    data = request.get_json()
+    
+    try:
+        km_final = float(data['kilometrajeFinal'])
+        
+        exito = sistema.finalizar_alquiler(id_alquiler, km_final)
+        
+        if exito:
+            return jsonify({"mensaje": "Alquiler finalizado con éxito"}), 200
+        else:
+            return jsonify({"error": "No se pudo finalizar el alquiler."}), 400
+            
+    except ValueError as e:
+        return jsonify({"error": f"Error de formato de kilometraje: {str(e)}"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 
 if __name__ == '__main__':
