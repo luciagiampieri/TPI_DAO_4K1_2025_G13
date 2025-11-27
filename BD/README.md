@@ -202,7 +202,7 @@ TRUNCATE TABLE CLIENTE;
 
 INSERT INTO CLIENTE (ID_CLIENTE, NOMBRE, DNI, TELEFONO, MAIL) VALUES
 (1, 'Juan Perez', '30111222', '1133445566', 'juan.perez@example.com'),
-(2, 'Maria Lopez', '29222333', '1144556677', 'maria.lopez@example.com');
+(2, 'Mari a Lopez', '29222333', '1144556677', 'maria.lopez@example.com');
 
 -- ==========================================================
 -- EMPLEADO

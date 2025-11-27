@@ -25,36 +25,38 @@ const VehiculosList = () => {
         costoDiario: ''
     });
 
-    useEffect(() => {
-        // Carga de datos de consulta (Categorías y Estados)
-        const loadInitialData = async () => {
-            try {
-                const [cats, ests, vehs] = await Promise.all([
-                    getCategorias(),
-                    getEstadosPorAmbito(AMBITO_VEHICULO_ID),
-                    listarVehiculos() // Si el endpoint está listo
-                ]);
-                
-                setCategorias(cats);
-                setEstados(ests);
-                setVehiculos(vehs);
 
-                // Establecer el estado inicial (ej: Disponible) por defecto
-                const disponible = ests.find(e => e.nombre === 'Disponible');
-                if (disponible) {
-                    setNuevoVehiculo(prev => ({ ...prev, estadoId: disponible.id }));
-                }
+    const loadInitialData = async () => {
+        try {
+            const [cats, ests, vehs] = await Promise.all([
+                getCategorias(),
+                getEstadosPorAmbito(AMBITO_VEHICULO_ID),
+                listarVehiculos()
+            ]);
 
-            } catch (error) {
-                console.error("Error al cargar datos:", error);
-                Swal.fire('Error', 'No se pudieron cargar Categorías o Estados.', 'error');
-            } finally {
-                setIsLoading(false);
+            setCategorias(cats);
+            setEstados(ests);
+            setVehiculos(vehs);
+
+            const disponible = ests.find(e => e.nombre === 'Disponible');
+            if (disponible) {
+                setNuevoVehiculo(prev => ({ ...prev, estadoId: disponible.id }));
             }
-        };
+
+        } catch (error) {
+            console.error("Error al cargar datos:", error);
+            Swal.fire('Error', 'No se pudieron cargar Categorías o Estados.', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+
+    useEffect(() => {
         loadInitialData();
     }, []);
 
+    
     const handleInputChange = (e) => {
         setNuevoVehiculo({ ...nuevoVehiculo, [e.target.name]: e.target.value });
     };
@@ -75,7 +77,7 @@ const VehiculosList = () => {
             try {
                 await eliminarVehiculo(id);
                 Swal.fire('Eliminado!', `El vehículo ${patente} ha sido eliminado.`, 'success');
-                cargarVehiculos(); // Recargar la lista después de la eliminación
+                loadInitialData(); // Recarga la tabla
             } catch (error) {
                 const errorMessage = error.response?.data?.error || "Error al eliminar (posiblemente tiene alquileres asociados).";
                 Swal.fire('Error', errorMessage, 'error');
@@ -89,8 +91,7 @@ const VehiculosList = () => {
             await crearVehiculo(nuevoVehiculo);
             Swal.fire('¡Éxito!', 'Vehículo registrado correctamente.', 'success');
             setFormVisible(false);
-            // setNuevoVehiculo debe resetearse, pero por ahora solo cerramos el modal
-            cargarVehiculos(); // Asumiendo que esta función existe
+            loadInitialData(); // Recarga la tabla
         } catch (error) {
             Swal.fire('Error', error.response?.data?.error || 'Hubo un problema al registrar.', 'error');
         }
