@@ -31,7 +31,10 @@ export const listarVehiculos = async () => {
 export const crearVehiculo = async (vehiculoData) => {
     // Llama al endpoint /api/vehiculos (POST)
     const response = await axios.post(VEHICULOS_URL, vehiculoData);
-    return response.data;
+    if (response.status === 201) {
+        return true;
+    }
+    throw new Error('Error al crear el vehículo');
 };
 
 export const eliminarVehiculo = async (idVehiculo) => {

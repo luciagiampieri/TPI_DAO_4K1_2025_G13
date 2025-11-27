@@ -133,6 +133,9 @@ const VehiculosList = () => {
                 costoDiario: ''
             });
             cargarVehiculos();
+
+            loadInitialData(); // Recarga la tabla
+
         } catch (error) {
             Swal.fire('Error', error.response?.data?.error || 'Hubo un problema al registrar.', 'error');
         }

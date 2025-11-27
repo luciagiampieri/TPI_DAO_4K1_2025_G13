@@ -152,19 +152,31 @@ class VehiculoManager:
     # ----------------------------------------------------------
     def eliminar(self, id_vehiculo):
         conn = self.db_connection.get_connection()
+        if conn is None: return False
         cursor = conn.cursor()
-
+        
         try:
-            cursor.execute("""
-                DELETE FROM VEHICULO 
-                WHERE ID_VEHICULO = %s
+            cursor.execute("SELECT ID_DETALLE_VEHICULO FROM VEHICULO WHERE ID_VEHICULO = %s", (id_vehiculo,))
+            row = cursor.fetchone()
+            
+            if not row:
+                print(f"Error: Vehículo con ID {id_vehiculo} no encontrado.")
+                return False
                 
-                DELETE FROM DETALLE_VEHICULO
-                WHERE ID_DETALLE_VEHICULO = (SELECT ID_DETALLE_VEHICULO FROM VEHICULO WHERE ID_VEHICULO = %s)   
-            """, (id_vehiculo, id_vehiculo))
+            id_detalle = row['ID_DETALLE_VEHICULO'] 
+            
+            cursor.execute("DELETE FROM VEHICULO WHERE ID_VEHICULO = %s", (id_vehiculo,))
 
+            cursor.execute("""
+                DELETE FROM DETALLE_VEHICULO
+                WHERE ID_DETALLE_VEHICULO = %s
+                AND NOT EXISTS (
+                    SELECT 1 FROM VEHICULO WHERE ID_DETALLE_VEHICULO = %s
+                )
+            """, (id_detalle, id_detalle))
+            
             conn.commit()
-            return cursor.rowcount > 0
+            return True
 
         except pymysql.MySQLError as e:
             print(f"Error al eliminar vehículo: {e}")
