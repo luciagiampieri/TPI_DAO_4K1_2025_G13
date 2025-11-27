@@ -94,7 +94,7 @@ class SistemaDeAlquiler:
             return None
         
         # 3. Calcular Costo y Crear objeto Alquiler
-        estado_activo = self.estado_manager.obtener_por_id(1) # Estado 'Activo'
+        estado_activo = self.estado_manager.obtener_por_id(6) # Estado 'Activo'
         
         nuevo_alquiler = Alquiler.Alquiler(
             id_alquiler=None, 
@@ -335,11 +335,15 @@ class SistemaDeAlquiler:
 
         return False
 
-    def eliminar_mantenimiento(self, id_mantenimiento):
+    def eliminar_mantenimiento(self, id_mantenimiento, id_vehiculo):
         """Lógica de Negocio para eliminar un mantenimiento."""
         exito = self.mantenimiento_manager.eliminar_mantenimiento(id_mantenimiento)
 
         if exito:
+            if self.verificar_estado_vehiculo_mantenimiento(id_vehiculo):
+                self.vehiculo_manager.actualizar_estado(id_vehiculo, 3) # 3 = 'Mantenimiento'
+            else:
+                self.vehiculo_manager.actualizar_estado(id_vehiculo, 1) # 1 = 'Disponible'
             return True
 
         return False
@@ -370,6 +374,11 @@ class SistemaDeAlquiler:
         mantenimiento_actualizado = self.mantenimiento_manager.actualizar(mantenimiento)
 
         if mantenimiento_actualizado:
+            if self.verificar_estado_vehiculo_mantenimiento(data.id_vehiculo):
+                self.vehiculo_manager.actualizar_estado(data.id_vehiculo, 3) # 3 = 'Mantenimiento'
+            else:
+                self.vehiculo_manager.actualizar_estado(data.id_vehiculo, 1) # 1 = 'Disponible'
+            return True
             return mantenimiento_actualizado
 
         return None
