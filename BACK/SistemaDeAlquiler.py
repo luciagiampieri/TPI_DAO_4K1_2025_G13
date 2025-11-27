@@ -219,6 +219,54 @@ class SistemaDeAlquiler:
         
         # 4. Persistir el objeto Vehículo
         return self.vehiculo_manager.guardar(vehiculo)
+    
+
+    def modificar_vehiculo(self, id_vehiculo, data):
+        """Edita tanto la tabla VEHICULO como la tabla DETALLE_VEHICULO."""
+
+        vehiculo = self.vehiculo_manager.obtener_por_id(id_vehiculo)
+        if not vehiculo:
+            print(f"❌ Vehículo {id_vehiculo} no encontrado.")
+            return None
+
+        # --- Actualizar DETALLE_VEHICULO ---
+        detalle = vehiculo.caracteristica_vehiculo
+
+        detalle.modelo = data.get("modelo", detalle.modelo)
+        detalle.anio = data.get("anio", detalle.anio)
+
+        if "categoriaId" in data:
+            nueva_cat = self.categoria_manager.obtener_por_id(int(data["categoriaId"]))
+            if not nueva_cat:
+                print(f"❌ Categoría {data['categoriaId']} no encontrada.")
+                return None
+            detalle.categoria = nueva_cat
+
+        ok_detalle = self.caracteristica_vehiculo_manager.actualizar(detalle)
+        if not ok_detalle:
+            print("❌ No se pudo actualizar DETALLE_VEHICULO.")
+            return None
+
+        # --- Actualizar VEHICULO ---
+        vehiculo.patente = data.get("patente", vehiculo.patente)
+        vehiculo.kilometraje = data.get("kilometraje", vehiculo.kilometraje)
+        vehiculo.costo_diario = data.get("costoDiario", vehiculo.costo_diario)
+
+        if "estadoId" in data:
+            nuevo_estado = self.estado_manager.obtener_por_id(int(data["estadoId"]))
+            if not nuevo_estado:
+                print(f"❌ Estado {data['estadoId']} no encontrado.")
+                return None
+            vehiculo.estado = nuevo_estado
+
+        ok_vehiculo = self.vehiculo_manager.actualizar(vehiculo)
+        if not ok_vehiculo:
+            print("❌ No se pudo actualizar VEHICULO.")
+            return None
+
+        return vehiculo
+
+
 
     def listar_vehiculos(self):
         """Retorna la lista de objetos Vehiculo completos."""

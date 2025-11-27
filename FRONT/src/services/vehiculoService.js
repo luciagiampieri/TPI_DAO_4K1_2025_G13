@@ -39,9 +39,11 @@ export const crearVehiculo = async (vehiculoData) => {
 
 export const eliminarVehiculo = async (idVehiculo) => {
     // Llama al endpoint DELETE /api/vehiculos/{id}
-    const response = await axios.delete(`${VEHICULOS_URL}/${idVehiculo}`);
-    if (response.status == 200 || response.status == 204){
-        return true;
-    }
-    throw new Error('Error al eliminar el vehículo');
+    const response = await axios.delete(`${VEHICULOS_URL}/${idVehiculo}`); 
+    return response.data;
+};
+
+export const actualizarVehiculo = async (idVehiculo, data) => {
+    const response = await axios.put(`${VEHICULOS_URL}/${idVehiculo}`, data);
+    return response.data;
 };
