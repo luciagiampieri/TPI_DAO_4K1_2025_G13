@@ -1,5 +1,5 @@
 from datetime import datetime
-from .modelos import Cliente, Vehiculo, Alquiler, Empleado, Estado
+from .modelos import Cliente, Vehiculo, Alquiler, Empleado, Estado, Mantenimiento, Incidente, TipoIncidente, Ambito, Categoria, TipoMantenimiento, CaracteristicaVehiculo
 from BD.manager import CaracteristicaVehiculoManager, ClienteManager, VehiculoManager, AlquilerManager, EmpleadoManager, EstadoManager, MantenimientoManager, IncidenteManager, TipoIncidenteManager, AmbitoManager, CategoriaManager, TipoMantenimientoManager
 
 class SistemaDeAlquiler:
@@ -53,7 +53,7 @@ class SistemaDeAlquiler:
     ## GESTIÓN DE ALQUILERES (Lógica de Negocio Central)
     ## ---------------------------------------------
     
-    def __validar_disponibilidad_vehiculo(self, id_vehiculo, fecha_inicio, fecha_fin):
+    def validar_disponibilidad_vehiculo(self, id_vehiculo, fecha_inicio, fecha_fin):
         """
         LÓGICA DE NEGOCIO: Verifica si un vehículo está disponible.
         (Esta lógica se movió del Manager a la capa de Servicio).
@@ -65,13 +65,10 @@ class SistemaDeAlquiler:
             print(f"❌ Vehículo {id_vehiculo} no disponible por estado actual ({vehiculo.estado.estado}).")
             return False
 
-        # Verifica solapamiento de fechas en alquileres ACTIVO (ID_ESTADO = 201)
-        # Esto debe ser implementado con una consulta específica en el AlquilerManager
-        # o directamente aquí si se considera lógica simple de consulta.
         
         # Una implementación simplificada de la consulta (que debería ir en el Manager):
         # alquileres_solapados = self.alquiler_manager.buscar_alquileres_solapados(
-        #     id_vehiculo, fecha_inicio, fecha_fin, estado_alquiler_id=201
+        #     id_vehiculo, fecha_inicio, fecha_fin, estado_alquiler_id=1
         # )
         
         # if alquileres_solapados:
@@ -93,11 +90,11 @@ class SistemaDeAlquiler:
             return None
         
         # 2. LÓGICA CENTRAL: Validar disponibilidad
-        if not self.__validar_disponibilidad_vehiculo(id_vehiculo, fecha_inicio, fecha_fin):
+        if not self.validar_disponibilidad_vehiculo(id_vehiculo, fecha_inicio, fecha_fin):
             return None
         
         # 3. Calcular Costo y Crear objeto Alquiler
-        estado_activo = self.estado_manager.obtener_por_id(201) # Estado 'Activo'
+        estado_activo = self.estado_manager.obtener_por_id(1) # Estado 'Activo'
         
         nuevo_alquiler = Alquiler.Alquiler(
             id_alquiler=None, 
@@ -281,6 +278,9 @@ class SistemaDeAlquiler:
         
         return self.vehiculo_manager.eliminar(id_vehiculo)
     
+    def verificar_estado_vehiculo_mantenimiento(self, id_vehiculo):
+        """Verifica si el vehículo está en estado de mantenimiento (ID_ESTADO = 3)."""
+        return self.vehiculo_manager.verificar_mantenimiento_activo(id_vehiculo) 
 
     # ----- ABM DE MANTENIMIENTOS -----
 
@@ -288,7 +288,7 @@ class SistemaDeAlquiler:
         """Retorna la lista de tipos de mantenimiento."""
         return self.tipomantenimiento_manager.listar_todos()
 
-    def registrar_mantenimiento(self, id_vehiculo, id_tipo_mantenimiento, fec_inicio, fec_fin, descripcion):
+    def registrar_mantenimiento(self, id_vehiculo, id_tipo_mantenimiento, tipo,fec_inicio, fec_fin, costo, observacion):
         """Lógica de Negocio para registrar un mantenimiento."""
         vehiculo = self.vehiculo_manager.obtener_por_id(id_vehiculo)
         tipo_mantenimiento = self.tipomantenimiento_manager.obtener_por_id(id_tipo_mantenimiento)
@@ -296,13 +296,24 @@ class SistemaDeAlquiler:
         if not vehiculo or not tipo_mantenimiento:
             print("❌ Vehículo o Tipo de Mantenimiento no encontrados.")
             return None
-
-        mantenimiento = self.mantenimiento_manager.crear_mantenimiento(
-            vehiculo, tipo_mantenimiento, fec_inicio, fec_fin, descripcion
+        
+        mantenimiento = Mantenimiento.Mantenimiento(
+            id_mantenimiento=None,
+            vehiculo=vehiculo,
+            tipo_mantenimiento=TipoMantenimiento.TipoMantenimiento(id_tipo_mantenimiento, tipo),
+            fecha_inicio=fec_inicio,
+            fecha_fin=fec_fin,
+            costo=costo,
+            observacion=observacion
         )
 
+        mantenimiento = self.mantenimiento_manager.guardar(mantenimiento)
+
         if mantenimiento:
-            self.vehiculo_manager.actualizar_estado(id_vehiculo, 3)
+            if self.verificar_estado_vehiculo_mantenimiento(id_vehiculo):
+                self.vehiculo_manager.actualizar_estado(id_vehiculo, 3) # 3 = 'Mantenimiento'
+            else:
+                self.vehiculo_manager.actualizar_estado(id_vehiculo, 1) # 1 = 'Disponible'
             return mantenimiento
 
         return None
