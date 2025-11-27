@@ -1,9 +1,5 @@
-# SistemaDeAlquiler.py
-
 from datetime import datetime
-# Importamos todas las clases de dominio que vamos a usar
 from .modelos import Cliente, Vehiculo, Alquiler, Empleado, Estado
-# Importamos todos los Managers necesarios para la orquestación
 from BD.manager import CaracteristicaVehiculoManager, ClienteManager, VehiculoManager, AlquilerManager, EmpleadoManager, EstadoManager, MantenimientoManager, IncidenteManager, TipoIncidenteManager, AmbitoManager, CategoriaManager, TipoMantenimientoManager
 
 class SistemaDeAlquiler:
@@ -64,8 +60,8 @@ class SistemaDeAlquiler:
         """
         vehiculo = self.vehiculo_manager.obtener_por_id(id_vehiculo)
         
-        # Asumimos ID 101 es 'Disponible' para Vehículos
-        if not vehiculo or vehiculo.estado.id_estado != 101:
+
+        if not vehiculo or vehiculo.estado.id_estado != 1:
             print(f"❌ Vehículo {id_vehiculo} no disponible por estado actual ({vehiculo.estado.estado}).")
             return False
 
@@ -74,16 +70,13 @@ class SistemaDeAlquiler:
         # o directamente aquí si se considera lógica simple de consulta.
         
         # Una implementación simplificada de la consulta (que debería ir en el Manager):
-        alquileres_solapados = self.alquiler_manager.buscar_alquileres_solapados(
-            id_vehiculo, fecha_inicio, fecha_fin, estado_alquiler_id=201
-        )
+        # alquileres_solapados = self.alquiler_manager.buscar_alquileres_solapados(
+        #     id_vehiculo, fecha_inicio, fecha_fin, estado_alquiler_id=201
+        # )
         
-        if alquileres_solapados:
-            print(f"❌ Vehículo {id_vehiculo} tiene alquileres activos que se solapan.")
-            return False
-        
-        # También se debería chequear mantenimiento
-        # MantenimientoManager.buscar_mantenimientos_solapados(...)
+        # if alquileres_solapados:
+        #     print(f"❌ Vehículo {id_vehiculo} tiene alquileres activos que se solapan.")
+        #     return False
             
         return True # Disponible
         
@@ -124,7 +117,7 @@ class SistemaDeAlquiler:
         
         if alquiler_persistido:
             # LÓGICA DE NEGOCIO: Cambiar estado del vehículo DESPUÉS de persistir el alquiler
-            self.vehiculo_manager.actualizar_estado(id_vehiculo, 102) # 102 = 'Alquilado'
+            self.vehiculo_manager.actualizar_estado(id_vehiculo, 2) # 2 = 'Alquilado'
             return alquiler_persistido
             
         return None
@@ -140,10 +133,11 @@ class SistemaDeAlquiler:
         alquiler_actualizado = self.alquiler_manager.actualizar(alquiler)
 
         if alquiler_actualizado:
-            self.vehiculo_manager.actualizar_estado(alquiler.vehiculo.id_vehiculo, 101) 
+            self.vehiculo_manager.actualizar_estado(alquiler.vehiculo.id_vehiculo, 1) 
             return True
         return False
     
+    # el eliminar pasa a ser cancelar, con el estado 5
     def eliminar_alquiler(self, id_alquiler):
         """Lógica de Eliminación de un Alquiler (si está en estado 'Activo')."""
         alquiler = self.alquiler_manager.obtener_por_id(id_alquiler)
@@ -163,15 +157,11 @@ class SistemaDeAlquiler:
     ## ---------------------------------------------
     ## REPORTES
     ## ---------------------------------------------
-
-    # Los métodos de reportes irían aquí, usando métodos de consulta en los Managers.
-    # Ej: reporte_alquileres_por_cliente, reporte_vehiculos_mas_alquilados, etc.
     
     def generar_reporte_alquileres_por_cliente(self, id_cliente):
         # Esta consulta compleja debe ir en el AlquilerManager como un método específico.
         # return self.alquiler_manager.listar_por_cliente(id_cliente)
         pass # Implementación pendiente
-
 
     def listar_categorias(self):
         return self.categoria_manager.listar_todos()
@@ -179,7 +169,6 @@ class SistemaDeAlquiler:
     def listar_estados_por_ambito(self, ambito_id):
         return self.estado_manager.listar_por_ambito(ambito_id)
     
-
     def obtener_estado(self, id_estado):
         """Método auxiliar para obtener un objeto Estado completo."""
         return self.estado_manager.obtener_por_id(id_estado)
@@ -199,10 +188,15 @@ class SistemaDeAlquiler:
         if not categoria or not estado_inicial:
             print(f"❌ Error: Categoría ({id_categoria}) o Estado ({id_estado}) inicial no encontrados.") 
             return None
+        
+        detalle = CaracteristicaVehiculoManager.CaracteristicaVehiculo(
+            id_caracteristica=None,
+            modelo=modelo,
+            anio=anio,
+            categoria=categoria
+        )
 
-        # 2. Crear y persistir la Característica/Detalle del Vehículo
-        # NOTA: Debes pasar el objeto Categoria, no solo el ID, si el Manager lo espera.
-        detalle = self.caracteristica_vehiculo_manager.crear_detalle(modelo, anio, categoria)
+        detalle = self.caracteristica_vehiculo_manager.guardar(detalle)
         
         if not detalle:
             return None
@@ -220,7 +214,6 @@ class SistemaDeAlquiler:
         # 4. Persistir el objeto Vehículo
         return self.vehiculo_manager.guardar(vehiculo)
     
-
     def modificar_vehiculo(self, id_vehiculo, data):
         """Edita tanto la tabla VEHICULO como la tabla DETALLE_VEHICULO."""
 
@@ -266,8 +259,6 @@ class SistemaDeAlquiler:
 
         return vehiculo
 
-
-
     def listar_vehiculos(self):
         """Retorna la lista de objetos Vehiculo completos."""
         # Delega al Manager que obtiene los datos e intenta resolver las FKs en el Manager.
@@ -282,7 +273,7 @@ class SistemaDeAlquiler:
             return False
         
         # LÓGICA DE NEGOCIO: Verificar que no tenga alquileres activos
-        alquileres_activos = self.alquiler_manager.listar_por_vehiculo(id_vehiculo)
+        alquileres_activos = self.alquiler_manager.listar_activo_por_vehiculo(id_vehiculo)
         
         if len(alquileres_activos) > 0:
             print(f"❌ No se puede eliminar el vehículo {id_vehiculo} porque tiene alquileres activos.")
@@ -291,3 +282,83 @@ class SistemaDeAlquiler:
         return self.vehiculo_manager.eliminar(id_vehiculo)
     
 
+    # ----- ABM DE MANTENIMIENTOS -----
+
+    def listar_tipo_mantenimientos(self):
+        """Retorna la lista de tipos de mantenimiento."""
+        return self.tipomantenimiento_manager.listar_todos()
+
+    def registrar_mantenimiento(self, id_vehiculo, id_tipo_mantenimiento, fec_inicio, fec_fin, descripcion):
+        """Lógica de Negocio para registrar un mantenimiento."""
+        vehiculo = self.vehiculo_manager.obtener_por_id(id_vehiculo)
+        tipo_mantenimiento = self.tipomantenimiento_manager.obtener_por_id(id_tipo_mantenimiento)
+
+        if not vehiculo or not tipo_mantenimiento:
+            print("❌ Vehículo o Tipo de Mantenimiento no encontrados.")
+            return None
+
+        mantenimiento = self.mantenimiento_manager.crear_mantenimiento(
+            vehiculo, tipo_mantenimiento, fec_inicio, fec_fin, descripcion
+        )
+
+        if mantenimiento:
+            self.vehiculo_manager.actualizar_estado(id_vehiculo, 3)
+            return mantenimiento
+
+        return None
+    
+    def finalizar_mantenimiento(self, id_mantenimiento):
+        """Lógica de Negocio para finalizar un mantenimiento."""
+        mantenimiento = self.mantenimiento_manager.obtener_por_id(id_mantenimiento)
+
+        if not mantenimiento:
+            print(f"❌ Mantenimiento {id_mantenimiento} no encontrado.")
+            return False
+
+        mantenimiento.fecha_fin = datetime.now()
+        mantenimiento_actualizado = self.mantenimiento_manager.actualizar(mantenimiento)
+
+        if mantenimiento_actualizado:
+            self.vehiculo_manager.actualizar_estado(mantenimiento.vehiculo.id_vehiculo, 1)
+            return True
+
+        return False
+
+    def eliminar_mantenimiento(self, id_mantenimiento):
+        """Lógica de Negocio para eliminar un mantenimiento."""
+        exito = self.mantenimiento_manager.eliminar_mantenimiento(id_mantenimiento)
+
+        if exito:
+            return True
+
+        return False
+
+    def listar_mantenimientos_por_vehiculo(self, id_vehiculo):
+        """Retorna la lista de mantenimientos para un vehículo dado."""
+        return self.mantenimiento_manager.listar_por_vehiculo(id_vehiculo)
+    
+    def modificar_mantenimiento(self, id_mantenimiento, data):
+        """Lógica de Negocio para modificar un mantenimiento."""
+        mantenimiento = self.mantenimiento_manager.obtener_por_id(id_mantenimiento)
+
+        if not mantenimiento:
+            print(f"❌ Mantenimiento {id_mantenimiento} no encontrado.")
+            return None
+
+        # Actualizar campos según data
+        if "fec_inicio" in data:
+            mantenimiento.fecha_inicio = data["fec_inicio"]
+        if "fec_fin" in data:
+            mantenimiento.fecha_fin = data["fec_fin"]
+        if "descripcion" in data:
+            mantenimiento.observacion = data["descripcion"]
+        if "tipo_mantenimiento_id" in data:
+            tipo_mantenimiento = self.tipomantenimiento_manager.obtener_por_id(data["tipo_mantenimiento_id"])
+            mantenimiento.tipo_mantenimiento = tipo_mantenimiento
+
+        mantenimiento_actualizado = self.mantenimiento_manager.actualizar(mantenimiento)
+
+        if mantenimiento_actualizado:
+            return mantenimiento_actualizado
+
+        return None

@@ -26,11 +26,11 @@ class MantenimientoManager:
         tipo_mto_obj = self.tipo_mantenimiento_manager.obtener_por_id(row["ID_TIPO_MANTENIMIENTO"])
 
         fec_inicio = (
-            datetime.strptime(row["FEC_INICIO"], "%Y-%m-%d %H:%M:%S")
+            row["FEC_INICIO"]
             if row["FEC_INICIO"] else None
         )
         fec_fin = (
-            datetime.strptime(row["FEC_FIN"], "%Y-%m-%d %H:%M:%S")
+            row["FEC_FIN"]
             if row["FEC_FIN"] else None
         )
 
@@ -126,6 +126,110 @@ class MantenimientoManager:
 
         except pymysql.MySQLError as e:
             print(f"Error al finalizar mantenimiento: {e}")
+            conn.rollback()
+            return False
+
+        finally:
+            cursor.close()
+            conn.close()
+
+    def listar_por_vehiculo(self, id_vehiculo):
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("""
+                SELECT * 
+                FROM MANTENIMIENTO 
+                WHERE ID_VEHICULO = %s
+            """, (id_vehiculo,))
+
+            rows = cursor.fetchall()
+            return [self.__row_to_mantenimiento(row) for row in rows]
+
+        finally:
+            cursor.close()
+            conn.close()
+
+    def eliminar_mantenimiento(self, id_mantenimiento):
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("""
+                DELETE FROM MANTENIMIENTO
+                WHERE ID_MANTENIMIENTO = %s
+            """, (id_mantenimiento,))
+
+            conn.commit()
+            return cursor.rowcount > 0
+
+        except pymysql.MySQLError as e:
+            print(f"Error al eliminar mantenimiento: {e}")
+            conn.rollback()
+            return False
+
+        finally:
+            cursor.close()
+            conn.close()
+    
+    def eliminar_mantenimientos_por_vehiculo(self, id_vehiculo):
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("""
+                DELETE FROM MANTENIMIENTO
+                WHERE ID_VEHICULO = %s
+            """, (id_vehiculo,))
+
+            conn.commit()
+            return cursor.rowcount > 0
+
+        except pymysql.MySQLError as e:
+            print(f"Error al eliminar mantenimientos por vehículo: {e}")
+            conn.rollback()
+            return False
+
+        finally:
+            cursor.close()
+            conn.close()
+    
+    def actualizar(self, mantenimiento):
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            fec_inicio_str = mantenimiento.fecha_inicio.strftime("%Y-%m-%d %H:%M:%S")
+            fec_fin_str = (
+                mantenimiento.fecha_fin.strftime("%Y-%m-%d %H:%M:%S")
+                if mantenimiento.fecha_fin else None
+            )
+
+            cursor.execute("""
+                UPDATE MANTENIMIENTO
+                SET ID_VEHICULO = %s,
+                    ID_TIPO_MANTENIMIENTO = %s,
+                    FEC_INICIO = %s,
+                    FEC_FIN = %s,
+                    COSTO = %s,
+                    OBSERVACION = %s
+                WHERE ID_MANTENIMIENTO = %s
+            """, (
+                mantenimiento.vehiculo.id_vehiculo,
+                mantenimiento.tipo_mantenimiento.id_tipo_mantenimiento,
+                fec_inicio_str,
+                fec_fin_str,
+                mantenimiento.costo,
+                mantenimiento.observacion,
+                mantenimiento.id_mantenimiento
+            ))
+
+            conn.commit()
+            return cursor.rowcount > 0
+
+        except pymysql.MySQLError as e:
+            print(f"Error al modificar mantenimiento: {e}")
             conn.rollback()
             return False
 

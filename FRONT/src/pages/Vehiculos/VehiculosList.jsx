@@ -1,7 +1,8 @@
 // FRONTEND/src/pages/Vehiculos/VehiculosList.jsx
 
-import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { PencilSquareIcon, TrashIcon, EyeIcon } from "@heroicons/react/24/solid";
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { 
     listarVehiculos, 
@@ -16,6 +17,8 @@ import {
 const AMBITO_VEHICULO_ID = 1; 
 
 const VehiculosList = () => {
+    const navigate = useNavigate();
+
     const [vehiculos, setVehiculos] = useState([]);
     const [categorias, setCategorias] = useState([]);
     const [estados, setEstados] = useState([]);
@@ -445,6 +448,14 @@ const VehiculosList = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div className="flex justify-end gap-4">
+                                               {/* BOTÓN VER DETALLE (Con useNavigate) */}
+                                                <button 
+                                                    onClick={() => navigate(`/vehiculos/${v.id}`)}
+                                                    className="text-gray-500 hover:text-blue-600 transition-colors mr-3"
+                                                    title="Ver Detalle y Mantenimientos"
+                                                >
+                                                    <EyeIcon className="h-6 w-6" />
+                                                </button>
                                                 {/* EDITAR */}
                                                 <button
                                                     onClick={() => handleEditVehiculo(v)}

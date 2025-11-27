@@ -47,3 +47,13 @@ export const actualizarVehiculo = async (idVehiculo, data) => {
     const response = await axios.put(`${VEHICULOS_URL}/${idVehiculo}`, data);
     return response.data;
 };
+
+export const getVehiculoById = async (id) => {
+    const response = await axios.get(`${VEHICULOS_URL}/${id}`);
+    return response.data;
+};
+
+export const getMantenimientosByVehiculo = async (id) => {
+    const response = await axios.get(`/api/mantenimientos/vehiculo/${id}`);
+    return response.data;
+};

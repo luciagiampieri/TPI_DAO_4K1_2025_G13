@@ -37,7 +37,6 @@ def alta_cliente():
     
     return jsonify({"error": "No se pudo crear el cliente."}), 400
 
-
 @app.route('/api/clientes/<int:id_cliente>', methods=['PUT'])
 def actualizar_cliente(id_cliente):
     data = request.get_json()
@@ -54,7 +53,6 @@ def actualizar_cliente(id_cliente):
         }), 200
 
     return jsonify({"error": "No se pudo actualizar el cliente."}), 400
-
 
 @app.route('/api/clientes/<int:id_cliente>', methods=['DELETE'])
 def eliminar_cliente(id_cliente):
@@ -77,7 +75,6 @@ def listar_categorias():
     } for c in categorias]
     
     return jsonify(categorias_data)
-
 
 @app.route('/api/estados/<int:ambito_id>', methods=['GET'])
 def listar_estados_por_ambito(ambito_id):
@@ -112,6 +109,28 @@ def detalle_vehiculo():
     } for v in vehiculos]
     
     return jsonify(vehiculos_data)
+
+#obtener vehiculo por id
+@app.route('/api/vehiculos/<int:id_vehiculo>', methods=['GET'])
+def obtener_vehiculo_por_id(id_vehiculo):
+    """Endpoint para obtener el detalle de un vehículo por su ID."""
+    vehiculo = sistema.vehiculo_manager.obtener_por_id(id_vehiculo)
+    
+    if not vehiculo:
+        return jsonify({"error": "Vehículo no encontrado."}), 404
+    
+    vehiculo_data = {
+        'id': vehiculo.id_vehiculo,
+        'patente': vehiculo.patente,
+        'kilometraje': vehiculo.kilometraje,
+        'costo_diario': vehiculo.costo_diario,
+        'estado': vehiculo.estado.estado, # Obtenemos el nombre del estado
+        'modelo': vehiculo.caracteristica_vehiculo.modelo, # Obtenemos el modelo
+        'anio': vehiculo.caracteristica_vehiculo.anio,
+        'categoria': vehiculo.caracteristica_vehiculo.categoria.categoria # Obtenemos la categoría
+    }
+    
+    return jsonify(vehiculo_data)
 
 @app.route('/api/vehiculos', methods=['POST'])
 def alta_vehiculo():
@@ -149,7 +168,6 @@ def eliminar_vehiculo(id_vehiculo):
     else:
         return jsonify({"error": "No se pudo eliminar el vehículo."}), 400
     
-
 @app.route('/api/vehiculos/<int:id_vehiculo>', methods=['PUT'])
 def actualizar_vehiculo(id_vehiculo):
     data = request.get_json()
@@ -170,8 +188,6 @@ def actualizar_vehiculo(id_vehiculo):
 
     return jsonify({"error": "No se pudo actualizar el vehículo."}), 400
 
-
-
 # --- RUTAS DE EMPLEADOS (Para el Dropdown) ---
 @app.route('/api/empleados', methods=['GET'])
 def listar_empleados():
@@ -179,7 +195,6 @@ def listar_empleados():
     
     data = [{'id': e.id_empleado, 'nombre': e.nombre} for e in empleados]
     return jsonify(data)
-
 
 # --- RUTAS DE ALQUILERES ---
 @app.route('/api/alquileres', methods=['GET'])
@@ -199,7 +214,6 @@ def listar_alquileres():
     } for a in alquileres]
     
     return jsonify(data)
-
 
 @app.route('/api/alquileres', methods=['POST'])
 def crear_alquiler():
@@ -286,6 +300,77 @@ def finalizar_alquiler(id_alquiler):
         return jsonify({"error": f"Error de formato de kilometraje: {str(e)}"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+#-------------------------------
+#--- RUTAS DE MANTENIMIENTOS ---
+#-------------------------------
+@app.route('/api/mantenimientos/vehiculo/<int:id_vehiculo>', methods=['GET'])
+def listar_mantenimientos_vehiculo(id_vehiculo):
+    mantenimientos = sistema.listar_mantenimientos_por_vehiculo(id_vehiculo)
+    
+    data = [{
+        'id': m.id_mantenimiento,
+        'vehiculo': m.vehiculo.patente + ' - ' + m.vehiculo.caracteristica_vehiculo.modelo,
+        'tipo_mantenimiento': m.tipo_mantenimiento.tipo_mantenimiento,
+        'fecha_inicio': m.fecha_inicio.strftime('%Y-%m-%d %H:%M'),
+        'fecha_fin': m.fecha_fin.strftime('%Y-%m-%d %H:%M') if m.fecha_fin else None,
+        'costo': m.costo,
+        'descripcion': m.observacion
+    } for m in mantenimientos]
+    
+    return jsonify(data)
+
+#liminar un mantenimiento
+@app.route('/api/mantenimientos/<int:id_mantenimiento>', methods=['DELETE'])
+def eliminar_mantenimiento(id_mantenimiento):
+    exito = sistema.eliminar_mantenimiento(id_mantenimiento)
+    
+    if exito:
+        return jsonify({"mensaje": "Mantenimiento eliminado correctamente."}), 200
+    else:
+        return jsonify({"error": "No se pudo eliminar el mantenimiento."}), 400
+
+#crear un mantenimiento
+@app.route('/api/mantenimientos', methods=['POST'])
+def crear_mantenimiento():
+    data = request.get_json()
+    
+    try:
+        f_inicio = datetime.strptime(data['fechaInicio'], '%Y-%m-%dT%H:%M')
+        f_fin = (
+            datetime.strptime(data['fechaFin'], '%Y-%m-%dT%H:%M') 
+            if data.get('fechaFin') else None
+        )
+        
+        mantenimiento = sistema.registrar_mantenimiento(
+            int(data['vehiculoId']),
+            int(data['tipo_mantenimiento_id']),
+            f_inicio,
+            f_fin,
+            float(data['costo']),
+            data.get('descripcion', '')
+        )
+        
+        if mantenimiento:
+            return jsonify({"mensaje": "Mantenimiento registrado con éxito"}), 201
+        else:
+            return jsonify({"error": "No se pudo registrar el mantenimiento."}), 400
+            
+    except ValueError as e:
+        return jsonify({"error": f"Error de formato de fecha o costo: {str(e)}"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/tipos_mantenimiento', methods=['GET'])
+def listar_tipos_mantenimiento():
+    tipos = sistema.listar_tipo_mantenimientos()
+    
+    data = [{
+        'id': t.id_tipo_mantenimiento,
+        'tipo_mantenimiento': t.tipo_mantenimiento
+    } for t in tipos]
+    
+    return jsonify(data)
 
 
 
