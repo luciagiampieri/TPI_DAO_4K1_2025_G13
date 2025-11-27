@@ -113,3 +113,28 @@ class ClienteManager:
         finally:
             cursor.close()
             conn.close()
+
+    # --- 5. Eliminar (DELETE) ---
+    def eliminar(self, id_cliente):
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("DELETE FROM CLIENTE WHERE ID_CLIENTE = %s", (id_cliente,))
+            conn.commit()
+
+            # IMPORTANTE: contar afectación REALES
+            affected = cursor.rowcount
+            print("AFECTADAS:", affected)
+
+            # Si rowcount no funciona, igual devolvemos True
+            return True
+
+        except pymysql.MySQLError as e:
+            print(f"Error al eliminar cliente: {e}")
+            conn.rollback()
+            return False
+
+        finally:
+            cursor.close()
+            conn.close()

@@ -1,5 +1,6 @@
 // FRONTEND/src/pages/Vehiculos/VehiculosList.jsx
 
+import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/solid";
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { 
@@ -172,16 +173,15 @@ const VehiculosList = () => {
         return <div className="text-center p-10 text-lg text-blue-600 font-semibold">Cargando vehículos y configuración...</div>;
     }
 
-    // Función auxiliar para obtener el estilo del badge de estado
-    const getEstadoStyle = (estado) => {
-        if (estado === 'Disponible') {
-            return { color: 'text-green-800', bg: 'bg-green-100' };
-        }
-        if (estado === 'Alquilado') {
-            return { color: 'text-red-800', bg: 'bg-red-100' };
-        }
-        return { color: 'text-gray-800', bg: 'bg-gray-100' };
-    };
+    // Función para obtener estilo según estado
+        const getEstadoStyle = (estado) => {
+            switch (estado) {
+                case 'En Mantenimiento': return 'bg-blue-100 text-blue-800';
+                case 'Alquilado': return 'bg-red-100 text-red-800';
+                case 'Disponible': return 'bg-green-100 text-green-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        };
 
     return (
         <div>
@@ -429,7 +429,6 @@ const VehiculosList = () => {
                     <tbody className="bg-white divide-y divide-gray-200">
                         {vehiculos.length > 0 ? (
                             vehiculos.map((v) => {
-                                const style = getEstadoStyle(v.estado);
                                 return (
                                     <tr key={v.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{v.patente}</td>
@@ -437,22 +436,30 @@ const VehiculosList = () => {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{v.categoria}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${v.costo_diario}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${style.bg} ${style.color}`}>
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getEstadoStyle(v.estado)}`}>
                                                 {v.estado}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button 
-                                                className="text-indigo-600 hover:text-indigo-900 mr-2"
-                                                onClick={() => handleEditVehiculo(v)}
-                                            >
-                                                Editar
-                                            </button>
-                                            <button 
-                                                onClick={() => handleDeleteVehiculo(v.id, v.patente)}
-                                                className="text-red-600 hover:text-red-900">
-                                                Eliminar
-                                            </button>
+                                            <div className="flex justify-end gap-4">
+                                                {/* EDITAR */}
+                                                <button
+                                                    onClick={() => handleEditVehiculo(v)}
+                                                    className="text-blue-600 hover:text-blue-800"
+                                                    title="Editar"
+                                                >
+                                                    <PencilSquareIcon className="h-6 w-6" />
+                                                </button>
+
+                                                {/* ELIMINAR */}
+                                                <button
+                                                    onClick={() => handleDeleteVehiculo(v.id, v.patente)}
+                                                    className="text-red-600 hover:text-red-800"
+                                                    title="Eliminar"
+                                                >
+                                                    <TrashIcon className="h-6 w-6" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );

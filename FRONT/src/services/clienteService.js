@@ -36,3 +36,14 @@ export const updateCliente = async (id, clienteData) => {
         throw error;
     }
 };
+
+
+export const deleteCliente = async (id) => {
+    try {
+        const response = await axios.delete(`/api/clientes/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error al eliminar cliente:", error.response?.data);
+        throw error;
+    }
+};

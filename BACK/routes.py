@@ -55,6 +55,15 @@ def actualizar_cliente(id_cliente):
     return jsonify({"error": "No se pudo actualizar el cliente."}), 400
 
 
+@app.route('/api/clientes/<int:id_cliente>', methods=['DELETE'])
+def eliminar_cliente(id_cliente):
+    exito = sistema.cliente_manager.eliminar(id_cliente)
+
+    if exito:
+        return jsonify({"mensaje": "Cliente eliminado correctamente."}), 200
+    
+    return jsonify({"error": "No se pudo eliminar el cliente."}), 400
+
 @app.route('/api/categoria', methods=['GET'])
 def listar_categorias():
     """Endpoint para obtener las categorías de vehículos (tabla lookup)."""
