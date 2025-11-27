@@ -22,7 +22,7 @@ class CaracteristicaVehiculoManager:
         return CaracteristicaVehiculo(
             id_caracteristica=row['ID_DETALLE_VEHICULO'],
             modelo=row['MODELO'],
-            anio=row['AÑO'],          # Ajustar si usás AÑO en la BD
+            anio=row['ANIO'],          # TUVE QUE CAMBIAR A ANIO PORQUE NO ANDABA
             categoria=categoria_obj
         )
 

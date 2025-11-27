@@ -1,5 +1,6 @@
 
 class CaracteristicaVehiculo:
+    
     def __init__(self, id_caracteristica, modelo, anio, categoria):
         self.id_caracteristica = id_caracteristica
         self.modelo = modelo

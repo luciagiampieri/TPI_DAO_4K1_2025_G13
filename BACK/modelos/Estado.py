@@ -1,5 +1,6 @@
 
 class Estado:
+    
     def __init__(self, id_estado, ambito, estado):
         self.id_estado = id_estado
         self.ambito = ambito

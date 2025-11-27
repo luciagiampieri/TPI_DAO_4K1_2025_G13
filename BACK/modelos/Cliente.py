@@ -1,4 +1,5 @@
 class Cliente:
+    
     def __init__(self, nombre, dni, telefono=None, mail=None, id_cliente=None):
         self.id_cliente = id_cliente 
         self.nombre = nombre
