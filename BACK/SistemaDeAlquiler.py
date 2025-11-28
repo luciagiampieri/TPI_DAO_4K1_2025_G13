@@ -495,3 +495,45 @@ class SistemaDeAlquiler:
             return True
 
         return False
+
+    #abm de incidentes
+    def listar_tipos_incidentes(self):
+        """Retorna la lista de tipos de incidentes."""
+        return self.tipo_incidente_manager.listar_todos()
+    
+    def registrar_incidente(self, id_alquiler, id_tipo, fecha, descripcion):
+        """Lógica para registrar un incidente asociado a un alquiler."""
+        
+        alquiler_obj = self.alquiler_manager.obtener_por_id(id_alquiler)
+        
+        tipo_obj = self.tipo_incidente_manager.obtener_por_id(id_tipo)
+
+        if not alquiler_obj or not tipo_obj:
+            print(f"❌ Error: Alquiler ({id_alquiler}) o Tipo Incidente ({id_tipo}) no encontrados.")
+            return None
+
+        # 3. Crear el objeto
+        nuevo_incidente = Incidente.Incidente(
+            id_incidente=None,
+            tipo_incidente=tipo_obj,
+            alquiler=alquiler_obj,
+            fecha_incidente=fecha,
+            descripcion=descripcion
+        )
+
+        # 4. Guardar
+        return self.incidente_manager.guardar(nuevo_incidente)
+    
+    def listar_incidentes_por_alquiler(self, id_alquiler):
+        """Retorna la lista de incidentes para un alquiler dado."""
+        return self.incidente_manager.listar_por_alquiler(id_alquiler)
+    
+    
+    def eliminar_incidente(self, id_incidente):
+        """Lógica de Negocio para eliminar un incidente."""
+        exito = self.incidente_manager.eliminar(id_incidente)
+
+        if exito:
+            return True
+
+        return False

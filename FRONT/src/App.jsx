@@ -8,6 +8,7 @@ import VehiculosList from './pages/Vehiculos/VehiculosList';
 import AlquileresList from './pages/Alquileres/AlquileresList';
 import VehiculoDetalle from './pages/Vehiculos/VehiculoDetalle';
 import Reportes from './pages/Reports/Reportes';
+import AlquilerDetalle from './pages/Alquileres/AlquileresDetalle';
 
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
                 <Route path="/vehiculos" element={<VehiculosList />} />
                 <Route path="/vehiculos/:id" element={<VehiculoDetalle />} />
                 <Route path="/alquileres" element={<AlquileresList />} />
+                <Route path="/alquileres/:id" element={<AlquilerDetalle />} />
                 <Route path="/reportes" element={<Reportes />} />
                 </Routes>
             </Layout>

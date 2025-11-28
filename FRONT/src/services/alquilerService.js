@@ -8,6 +8,11 @@ export const getAlquileres = async () => {
     return response.data;
 };
 
+export const getAlquilerById = async (id) => {
+    const response = await axios.get(`/api/alquileres/${id}`);
+    return response.data;
+};
+
 export const getEmpleados = async () => {
     const response = await axios.get(EMPLEADOS_URL);
     return response.data;

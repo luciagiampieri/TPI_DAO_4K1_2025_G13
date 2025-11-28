@@ -24,24 +24,14 @@ class TipoIncidenteManager:
     # ----------------------------------------------------------
     #   OBTENER POR ID
     # ----------------------------------------------------------
-    def obtener_por_id(self, id_tipo_incidente):
+    def obtener_por_id(self, id_tipo):
         conn = self.db_connection.get_connection()
         cursor = conn.cursor()
-
         try:
-            cursor.execute("""
-                SELECT * 
-                FROM TIPO_INCIDENTE 
-                WHERE ID_TIPO_INCIDENTE = %s
-            """, (id_tipo_incidente,))
-
+            sql = "SELECT * FROM TIPO_INCIDENTE WHERE ID_TIPO_INCIDENTE = %s"
+            cursor.execute(sql, (id_tipo,))
             row = cursor.fetchone()
             return self.__row_to_tipo_incidente(row)
-
-        except pymysql.MySQLError as e:
-            print(f"Error al obtener tipo de incidente: {e}")
-            return None
-        
         finally:
             cursor.close()
             conn.close()
@@ -65,3 +55,5 @@ class TipoIncidenteManager:
         finally:
             cursor.close()
             conn.close()
+
+    

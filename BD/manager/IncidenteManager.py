@@ -27,8 +27,7 @@ class IncidenteManager:
         # TEMPORAL: Alquiler solo como ID hasta que lo conectes con AlquilerManager
         alquiler_obj = row["ID_ALQUILER"]
 
-        fec_incidente = (
-            datetime.strptime(row["FEC_INCIDENTE"], "%Y-%m-%d %H:%M:%S")
+        fec_incidente = (row["FEC_INCIDENTE"]
             if row["FEC_INCIDENTE"]
             else None
         )
@@ -39,7 +38,6 @@ class IncidenteManager:
             alquiler=alquiler_obj,
             fecha_incidente=fec_incidente,
             descripcion=row["DESCRIPCION"],
-            costo=row["COSTO"]
         )
 
     # ----------------------------------------------------------
@@ -48,31 +46,24 @@ class IncidenteManager:
     def guardar(self, incidente):
         conn = self.db_connection.get_connection()
         cursor = conn.cursor()
-
         try:
-            fec_incidente_str = incidente.fecha_incidente.strftime("%Y-%m-%d %H:%M:%S")
-
-            cursor.execute("""
-                INSERT INTO INCIDENTE 
-                    (ID_TIPO_INCIDENTE, ID_ALQUILER, FEC_INCIDENTE, DESCRIPCION, COSTO)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (
+            sql = """
+                INSERT INTO INCIDENTE (ID_TIPO_INCIDENTE, ID_ALQUILER, FEC_INCIDENTE, DESCRIPCION) 
+                VALUES (%s, %s, %s, %s)
+            """
+            cursor.execute(sql, (
                 incidente.tipo_incidente.id_tipo_incidente,
-                incidente.alquiler,        # ya que estás usando ID directamente
-                fec_incidente_str,
+                incidente.alquiler.id_alquiler, # Accedemos al ID del objeto Alquiler
+                incidente.fecha_incidente,
                 incidente.descripcion,
-                incidente.costo
             ))
-
-            incidente.id_incidente = cursor.lastrowid
             conn.commit()
+            incidente.id_incidente = cursor.lastrowid
             return incidente
-
-        except pymysql.MySQLError as e:
+        except Exception as e:
             print(f"Error al guardar incidente: {e}")
             conn.rollback()
             return None
-
         finally:
             cursor.close()
             conn.close()
@@ -114,41 +105,43 @@ class IncidenteManager:
             cursor.close()
             conn.close()
 
-    # ----------------------------------------------------------
-    #   ACTUALIZAR
-    # ----------------------------------------------------------
-    def actualizar(self, incidente):
+    def listar_por_alquiler(self, id_alquiler):
         conn = self.db_connection.get_connection()
         cursor = conn.cursor()
 
         try:
-            fec_incidente_str = incidente.fecha_incidente.strftime("%Y-%m-%d %H:%M:%S")
-
             cursor.execute("""
-                UPDATE INCIDENTE 
-                SET ID_TIPO_INCIDENTE = %s,
-                    ID_ALQUILER = %s,
-                    FEC_INCIDENTE = %s,
-                    DESCRIPCION = %s,
-                    COSTO = %s
+                SELECT * 
+                FROM INCIDENTE 
+                WHERE ID_ALQUILER = %s
+            """, (id_alquiler,))
+
+            rows = cursor.fetchall()
+            return [self.__row_to_incidente(row) for row in rows]
+
+        finally:
+            cursor.close()
+            conn.close()
+
+    def eliminar(self, id_incidente):
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("""
+                DELETE FROM INCIDENTE 
                 WHERE ID_INCIDENTE = %s
-            """, (
-                incidente.tipo_incidente.id_tipo_incidente,
-                incidente.alquiler,
-                fec_incidente_str,
-                incidente.descripcion,
-                incidente.costo,
-                incidente.id_incidente
-            ))
+            """, (id_incidente,))
 
             conn.commit()
             return cursor.rowcount > 0
 
         except pymysql.MySQLError as e:
-            print(f"Error al actualizar incidente: {e}")
+            print(f"Error al eliminar incidente: {e}")
             conn.rollback()
             return False
 
         finally:
             cursor.close()
             conn.close()
+

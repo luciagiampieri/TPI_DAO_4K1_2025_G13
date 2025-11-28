@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
+// 1. IMPORTAR useNavigate
+import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { 
     getAlquileres, 
     crearAlquiler, 
     updateAlquiler, 
     getEmpleados, 
-    cancelarAlquiler,  // <--- Usamos cancelar
+    cancelarAlquiler,
     finalizarAlquiler 
 } from '../../services/alquilerService';
 import { getClientes } from '../../services/clienteService';
@@ -14,12 +16,15 @@ import {
     FunnelIcon, 
     XMarkIcon, 
     PencilSquareIcon, 
-    XCircleIcon, // Icono para cancelar
+    XCircleIcon,
     CheckCircleIcon, 
     EyeIcon 
 } from "@heroicons/react/24/solid";
 
 const AlquileresList = () => {
+    // 2. INICIALIZAR EL HOOK
+    const navigate = useNavigate();
+
     const [alquileres, setAlquileres] = useState([]);
     const [clientes, setClientes] = useState([]);
     const [vehiculos, setVehiculos] = useState([]);
@@ -66,8 +71,8 @@ const AlquileresList = () => {
 
     const getMinDateTime = () => {
         const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Ajuste de zona horaria local
-        return now.toISOString().slice(0, 16); // Formato: "YYYY-MM-DDTHH:mm"
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        return now.toISOString().slice(0, 16);
     };
 
     const handleInputChange = (e) => {
@@ -81,7 +86,6 @@ const AlquileresList = () => {
 
     // --- ACTIONS ---
 
-    // 1. CANCELAR (Lógica Transaccional)
     const handleCancel = async (id) => {
         const result = await Swal.fire({
             title: '¿Cancelar Alquiler?',
@@ -104,7 +108,6 @@ const AlquileresList = () => {
         }
     };
 
-    // 2. FINALIZAR (Lógica Transaccional)
     const handleFinalize = async (id) => {
         const { value: km } = await Swal.fire({
             title: 'Finalizar Alquiler',
@@ -131,11 +134,10 @@ const AlquileresList = () => {
         }
     };
 
-    // 3. EDITAR
     const handleEditClick = (alq) => {
         setFormData({
             id: alq.id,
-            clienteId: alq.cliente_id,
+            clienteId: alq.cliente_id, // Asegúrate de que el backend mande estos campos snake_case o camelCase según corresponda
             vehiculoId: alq.vehiculo_id,
             empleadoId: alq.empleado_id,
             fechaInicio: formatFechaInput(alq.fecha_inicio),
@@ -168,37 +170,17 @@ const AlquileresList = () => {
         }
     };
 
-    const handleView = (alq) => {
-        Swal.fire({
-            title: '<strong>Detalle del Alquiler</strong>',
-            html: `
-                <div class="text-left text-sm">
-                    <p><b>ID:</b> #${alq.id}</p>
-                    <p><b>Vehículo:</b> ${alq.vehiculo}</p>
-                    <p><b>Cliente:</b> ${alq.cliente}</p>
-                    <p><b>Empleado:</b> ${alq.empleado}</p>
-                    <hr class="my-2">
-                    <p><b>Inicio:</b> ${alq.fecha_inicio}</p>
-                    <p><b>Fin:</b> ${alq.fecha_fin}</p>
-                    <p class="mt-2 text-lg"><b>Estado:</b> <span class="font-bold">${alq.estado}</span></p>
-                    <p class="text-xl text-green-600"><b>Total:</b> $${alq.costo_total}</p>
-                </div>
-            `,
-            confirmButtonText: 'Cerrar'
-        });
-    };
+    // YA NO NECESITAMOS handleView PORQUE USAREMOS NAVEGACIÓN DIRECTA
 
     const getEstadoStyle = (estado) => {
-        // Normalizamos mayúsculas/minúsculas por las dudas
         const est = estado.toUpperCase();
         if (est.includes('CURSO')) return 'bg-green-100 text-green-800 border border-green-200';
         if (est.includes('FINALIZADO')) return 'bg-blue-100 text-blue-800 border border-blue-200';
         if (est.includes('CANCELADO')) return 'bg-red-100 text-red-800 border border-red-200';
-        if (est.includes('RESERVADO')) return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
+        if (est.includes('PENDIENTE DE INICIO')) return 'bg-gray-100 text-gray-800 border border-gray-200';
         return 'bg-gray-100 text-gray-800';
     };
 
-    // Filtrado
     const alquileresFiltrados = alquileres.filter((alquiler) => {
         if (!filtroCliente) return true;
         return alquiler.cliente_id === parseInt(filtroCliente);
@@ -221,7 +203,6 @@ const AlquileresList = () => {
                 </button>
             </div>
 
-            {/* FILTRO */}
             <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
                 <div className="flex items-center text-gray-500 font-medium">
                     <FunnelIcon className="h-5 w-5 mr-2" />
@@ -242,7 +223,6 @@ const AlquileresList = () => {
                 )}
             </div>
 
-            {/* TABLA */}
             <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
@@ -260,7 +240,7 @@ const AlquileresList = () => {
                             {alquileresFiltrados.length > 0 ? (
                                 alquileresFiltrados.map((a) => {
                                     const estadoUpper = a.estado.toUpperCase();
-                                    const esActivo = estadoUpper.includes('CURSO') || estadoUpper.includes('PENDIENTE DE INICIO');
+                                    const esActivo = estadoUpper.includes('CURSO') || estadoUpper.includes('PENDIENTE');
                                     const esEnCurso = estadoUpper.includes('CURSO');
 
                                     return (
@@ -282,26 +262,27 @@ const AlquileresList = () => {
                                             <td className="px-6 py-4 text-right whitespace-nowrap">
                                                 <div className="flex justify-end gap-3">
                                                     
-                                                    {/* VER DETALLE (Siempre visible) */}
-                                                    <button onClick={() => handleView(a)} className="text-gray-400 hover:text-indigo-600" title="Ver Detalle">
+                                                    {/* 3. CAMBIO DE BOTÓN VER DETALLE: Usar navigate */}
+                                                    <button 
+                                                        onClick={() => navigate(`/alquileres/${a.id}`)}
+                                                        className="text-gray-400 hover:text-indigo-600" 
+                                                        title="Ver Detalle e Incidentes"
+                                                    >
                                                         <EyeIcon className="h-5 w-5" />
                                                     </button>
 
-                                                    {/* MODIFICAR (Solo si es activo) */}
                                                     {esActivo && (
                                                         <button onClick={() => handleEditClick(a)} className="text-blue-400 hover:text-blue-600" title="Editar datos">
                                                             <PencilSquareIcon className="h-5 w-5" />
                                                         </button>
                                                     )}
 
-                                                    {/* FINALIZAR (Solo si está En Curso) */}
                                                     {esEnCurso && (
                                                         <button onClick={() => handleFinalize(a.id)} className="text-green-500 hover:text-green-700" title="Finalizar Alquiler">
                                                             <CheckCircleIcon className="h-6 w-6" />
                                                         </button>
                                                     )}
 
-                                                    {/* CANCELAR (Solo si es activo) */}
                                                     {esActivo && (
                                                         <button onClick={() => handleCancel(a.id)} className="text-red-400 hover:text-red-600" title="Cancelar Alquiler">
                                                             <XCircleIcon className="h-6 w-6" />
@@ -324,7 +305,7 @@ const AlquileresList = () => {
                 </div>
             </div>
 
-            {/* --- MODAL FORMULARIO (Crear/Editar) --- */}
+            {/* MODAL FORMULARIO (Se mantiene igual que antes) */}
             {(formVisible || editVisible) && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
                     <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all scale-100">

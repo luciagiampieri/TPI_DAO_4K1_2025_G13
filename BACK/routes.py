@@ -535,6 +535,77 @@ def reporte_periodo():
         
     return jsonify(data)
 
+@app.route('/api/alquileres/<int:id_alquiler>', methods=['GET'])
+def obtener_alquiler(id_alquiler):
+    alq = sistema.alquiler_manager.obtener_por_id(id_alquiler)
+    if not alq:
+        return jsonify({"error": "Alquiler no encontrado"}), 404
+        
+    data = {
+        'id': alq.id_alquiler,
+        'vehiculo': f"{alq.vehiculo.patente} - {alq.vehiculo.caracteristica_vehiculo.modelo}",
+        'cliente': alq.cliente.nombre,
+        'empleado': alq.empleado.nombre,
+        'fecha_inicio': alq.fecha_inicio.strftime('%Y-%m-%d %H:%M'),
+        'fecha_fin': alq.fecha_fin.strftime('%Y-%m-%d %H:%M'),
+        'costo_total': alq.costo_total,
+        'estado': alq.estado.estado
+    }
+    return jsonify(data)
+
+# 2. Listar Incidentes de un Alquiler
+@app.route('/api/incidentes/alquiler/<int:id_alquiler>', methods=['GET'])
+def listar_incidentes_alquiler(id_alquiler):
+    incidentes = sistema.listar_incidentes_por_alquiler(id_alquiler)
+    
+    data = [{
+        'id': i.id_incidente,
+        'id_tipo': i.tipo_incidente.id_tipo_incidente,
+        'tipo': i.tipo_incidente.tipo_incidente,
+        'fecha': i.fecha_incidente.strftime('%Y-%m-%d %H:%M'),
+        'descripcion': i.descripcion,
+    } for i in incidentes]
+    
+    return jsonify(data)
+
+# 3. Listar Tipos de Incidente (Lookup)
+@app.route('/api/tipos_incidente', methods=['GET'])
+def listar_tipos_incidente():
+    tipos = sistema.listar_tipos_incidentes()
+    data = [{'id': t.id_tipo_incidente, 'nombre': t.tipo_incidente} for t in tipos]
+    return jsonify(data)
+
+@app.route('/api/incidentes', methods=['POST'])
+def crear_incidente():
+    data = request.get_json()
+    try:
+        f_incidente = datetime.strptime(data['fecha'], '%Y-%m-%dT%H:%M')
+        
+        
+        incidente = sistema.registrar_incidente(
+            int(data['id_alquiler']),
+            int(data['id_tipo']),
+            f_incidente,
+            data.get('descripcion', '')
+        )
+        
+        if incidente:
+            return jsonify({"mensaje": "Incidente registrado"}), 201
+        return jsonify({"error": "No se pudo registrar"}), 400
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# 6. Eliminar Incidente
+@app.route('/api/incidentes/<int:id_incidente>', methods=['DELETE'])
+def eliminar_incidente(id_incidente):
+    if sistema.eliminar_incidente(id_incidente):
+        return '', 204
+    return jsonify({"error": "No se pudo eliminar"}), 400
+
+
+
 
 if __name__ == '__main__':
     app.run(
