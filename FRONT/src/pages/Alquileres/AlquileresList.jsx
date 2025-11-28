@@ -49,6 +49,13 @@ const AlquileresList = () => {
         loadData();
     }, []);
 
+    const getMinDateTime = () => {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Ajuste de zona horaria local
+        return now.toISOString().slice(0, 16); // Formato: "YYYY-MM-DDTHH:mm"
+    };
+
+
     const handleInputChange = (e) => {
         setNuevoAlquiler({ ...nuevoAlquiler, [e.target.name]: e.target.value });
     };
@@ -123,7 +130,6 @@ const AlquileresList = () => {
                                     <select name="vehiculoId" value={nuevoAlquiler.vehiculoId} onChange={handleInputChange} required className="mt-1 block w-full p-2 border border-gray-300 rounded-md">
                                         <option value="">Seleccione Vehículo</option>
                                         {vehiculos
-                                            .filter(v => v.estado === 'Disponible' || v.estado === 'DISPONIBLE') 
                                             .map(v => (
                                                 <option key={v.id} value={v.id}>
                                                     {v.patente} - {v.modelo} (${v.costo_diario}/día)
@@ -137,11 +143,28 @@ const AlquileresList = () => {
                                 {/* Fechas */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Fecha Inicio</label>
-                                    <input type="datetime-local" name="fechaInicio" value={nuevoAlquiler.fechaInicio} onChange={handleInputChange} required className="mt-1 block w-full p-2 border border-gray-300 rounded-md" />
+                                    <input 
+                                        type="datetime-local" 
+                                        name="fechaInicio" 
+                                        value={nuevoAlquiler.fechaInicio} 
+                                        onChange={handleInputChange} 
+                                        min={getMinDateTime()}  // <--- NUEVO: Bloquea pasado
+                                        required 
+                                        className="mt-1 block w-full p-2 border border-gray-300 rounded-md" 
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Fecha Fin</label>
-                                    <input type="datetime-local" name="fechaFin" value={nuevoAlquiler.fechaFin} onChange={handleInputChange} required className="mt-1 block w-full p-2 border border-gray-300 rounded-md" />
+                                    <input 
+                                        type="datetime-local" 
+                                        name="fechaFin" 
+                                        value={nuevoAlquiler.fechaFin} 
+                                        onChange={handleInputChange} 
+                                        // Si ya eligió inicio, el fin no puede ser antes de eso. Si no, usa "ahora".
+                                        min={nuevoAlquiler.fechaInicio || getMinDateTime()} // <--- NUEVO
+                                        required 
+                                        className="mt-1 block w-full p-2 border border-gray-300 rounded-md" 
+                                    />
                                 </div>
                             </div>
 

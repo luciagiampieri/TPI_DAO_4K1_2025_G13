@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from .modelos import Cliente, Vehiculo, Alquiler, Empleado, Estado, Mantenimiento, Incidente, TipoIncidente, Ambito, Categoria, TipoMantenimiento, CaracteristicaVehiculo
 from BD.manager import CaracteristicaVehiculoManager, ClienteManager, VehiculoManager, AlquilerManager, EmpleadoManager, EstadoManager, MantenimientoManager, IncidenteManager, TipoIncidenteManager, AmbitoManager, CategoriaManager, TipoMantenimientoManager
 
@@ -61,25 +61,39 @@ class SistemaDeAlquiler:
         vehiculo = self.vehiculo_manager.obtener_por_id(id_vehiculo)
         
 
-        if not vehiculo or vehiculo.estado.id_estado != 1:
-            print(f"❌ Vehículo {id_vehiculo} no disponible por estado actual ({vehiculo.estado.estado}).")
+        if not vehiculo:
+            return False
+        
+        
+        
+        if vehiculo.estado.id_estado in [3]: 
+            print(f"❌Vehículo {id_vehiculo} en estado no operativo: {vehiculo.estado.estado}")
             return False
 
         
-        # Una implementación simplificada de la consulta (que debería ir en el Manager):
-        # alquileres_solapados = self.alquiler_manager.buscar_alquileres_solapados(
-        #     id_vehiculo, fecha_inicio, fecha_fin, estado_alquiler_id=1
-        # )
-        
-        # if alquileres_solapados:
-        #     print(f"❌ Vehículo {id_vehiculo} tiene alquileres activos que se solapan.")
-        #     return False
-            
-        return True # Disponible
+        esta_disponible = self.alquiler_manager.verificar_disponibilidad_sp(id_vehiculo, fecha_inicio, fecha_fin)
+
+        if not esta_disponible:
+            print(f"❌El vehículo {id_vehiculo} ya tiene reservas en esas fechas (Validado por SP).")
+            return False
+
+        return True
         
     def registrar_alquiler(self, id_vehiculo, id_cliente, id_empleado, fecha_inicio, fecha_fin):
         """Aplica lógica de negocio para crear y persistir un alquiler."""
         
+        ahora = datetime.now()
+        
+        if fecha_inicio < (ahora - timedelta(minutes=1)):
+            print(f"❌Error: La fecha de inicio {fecha_inicio} es anterior a la actual.")
+            return None
+
+        # 2. Validar que la fecha fin no sea anterior a la de inicio
+        if fecha_fin <= fecha_inicio:
+            print(f"❌Error: La fecha de fin {fecha_fin} es anterior o igual a la de inicio.")
+            return None
+
+
         # 1. Obtener objetos dependientes
         vehiculo = self.vehiculo_manager.obtener_por_id(id_vehiculo)
         cliente = self.cliente_manager.obtener_por_id(id_cliente)
@@ -360,25 +374,34 @@ class SistemaDeAlquiler:
             print(f"❌ Mantenimiento {id_mantenimiento} no encontrado.")
             return None
 
-        # Actualizar campos según data
+        # Actualizar campos (Usando claves correctas y corchetes [])
         if "fec_inicio" in data:
             mantenimiento.fecha_inicio = data["fec_inicio"]
         if "fec_fin" in data:
             mantenimiento.fecha_fin = data["fec_fin"]
         if "descripcion" in data:
             mantenimiento.observacion = data["descripcion"]
-        if "tipo_mantenimiento_id" in data:
-            tipo_mantenimiento = self.tipomantenimiento_manager.obtener_por_id(data["tipo_mantenimiento_id"])
-            mantenimiento.tipo_mantenimiento = tipo_mantenimiento
+        if "costo" in data:
+            mantenimiento.costo = data["costo"]
+            
+        # Corrección de clave: 'id_tipo' (que es lo que manda routes)
+        if "id_tipo" in data:
+            tipo_mantenimiento = self.tipomantenimiento_manager.obtener_por_id(data["id_tipo"])
+            if tipo_mantenimiento:
+                mantenimiento.tipo_mantenimiento = tipo_mantenimiento
 
         mantenimiento_actualizado = self.mantenimiento_manager.actualizar(mantenimiento)
 
         if mantenimiento_actualizado:
-            if self.verificar_estado_vehiculo_mantenimiento(data.id_vehiculo):
-                self.vehiculo_manager.actualizar_estado(data.id_vehiculo, 3) # 3 = 'Mantenimiento'
-            else:
-                self.vehiculo_manager.actualizar_estado(data.id_vehiculo, 1) # 1 = 'Disponible'
-            return True
-            return mantenimiento_actualizado
 
-        return None
+            id_vehiculo = int(data['id_vehiculo'])
+            
+
+            if self.verificar_estado_vehiculo_mantenimiento(id_vehiculo):
+                self.vehiculo_manager.actualizar_estado(id_vehiculo, 3) # 3 = 'Mantenimiento'
+            else:
+                self.vehiculo_manager.actualizar_estado(id_vehiculo, 1) # 1 = 'Disponible'
+                
+            return True
+
+        return False

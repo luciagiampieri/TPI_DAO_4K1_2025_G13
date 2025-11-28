@@ -384,23 +384,30 @@ def modificar_mantenimiento(id_mantenimiento):
     data = request.get_json()
     
     try:
+        # 1. Parseo de fechas y números
         f_inicio = datetime.strptime(data['fecha_inicio'], '%Y-%m-%d')
+        
         f_fin = None
         if data.get('fecha_fin') and data['fecha_fin'].strip():
              f_fin = datetime.strptime(data['fecha_fin'], '%Y-%m-%d')
 
-        costo_str = data.get('costo', '')
-        costo = float(costo_str) if costo_str and costo_str.strip() else 0.0
+        costo_str = str(data.get('costo', '')) # Aseguramos que sea string antes de limpiar
+        costo = float(costo_str) if costo_str.strip() else 0.0
         
+        # 2. EMPAQUETAR TODO EN UN DICCIONARIO
+        datos_actualizados = {
+            'id_vehiculo': int(data['id_vehiculo']),
+            'id_tipo': int(data['id_tipo']),
+            'fec_inicio': f_inicio,
+            'fec_fin': f_fin,
+            'costo': costo,
+            'descripcion': data.get('observacion', '')
+        }
+
+        # 3. LLAMADA CORREGIDA: Pasamos solo ID y el DICCIONARIO
         mantenimiento_modificado = sistema.modificar_mantenimiento(
             id_mantenimiento,
-            int(data['id_vehiculo']),
-            int(data['id_tipo']),
-            data['tipo'],
-            f_inicio,
-            f_fin,
-            costo,
-            data['observacion']
+            datos_actualizados 
         )
         
         if mantenimiento_modificado:
@@ -409,8 +416,10 @@ def modificar_mantenimiento(id_mantenimiento):
             return jsonify({"error": "No se pudo modificar el mantenimiento."}), 400
             
     except ValueError as e:
-        return jsonify({"error": f"Error de formato de fecha o costo: {str(e)}"}), 400
+        print(f"Error de valor: {e}") # Imprimir en consola para ver el error real
+        return jsonify({"error": f"Error de formato: {str(e)}"}), 400
     except Exception as e:
+        print(f"Error general: {e}") # Imprimir en consola
         return jsonify({"error": str(e)}), 500
 
 

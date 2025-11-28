@@ -221,7 +221,7 @@ class MantenimientoManager:
             ))
 
             conn.commit()
-            return cursor.rowcount > 0
+            return True
 
         except pymysql.MySQLError as e:
             print(f"Error al modificar mantenimiento: {e}")

@@ -264,3 +264,37 @@ class AlquilerManager:
         finally:
             cursor.close()
             conn.close()
+
+    def verificar_disponibilidad_sp(self, id_vehiculo, fecha_inicio, fecha_fin):
+        """
+        Llama al SP_VALIDAR_DISPONIBILIDAD_ALQUILER.
+        Retorna True si está DISPONIBLE (el SP no devuelve nada).
+        Retorna False si está OCUPADO (el SP devuelve 1).
+        """
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            # Formateamos las fechas a string YYYY-MM-DD para evitar problemas con MySQL
+            f_inicio_str = fecha_inicio.strftime('%Y-%m-%d %H:%M:%S')
+            f_fin_str = fecha_fin.strftime('%Y-%m-%d %H:%M:%S')
+
+            cursor.callproc('SP_VALIDAR_DISPONIBILIDAD_ALQUILER', (id_vehiculo, f_inicio_str, f_fin_str))
+            
+            row = cursor.fetchone()
+
+            if row:
+                return False 
+
+            return True
+
+        except pymysql.MySQLError as e:
+            print(f"Error al ejecutar SP de validación: {e}")
+            return False
+
+        finally:
+            cursor.close()
+            conn.close()
+
+
+
