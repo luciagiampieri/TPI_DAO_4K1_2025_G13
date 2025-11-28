@@ -22,6 +22,20 @@ const Dashboard = () => {
         cargarDatosDashboard();
     }, []);
 
+    // Cuando se crea un alquiler desde cualquier parte de la app,
+    // el Dashboard se refresca automáticamente.
+    useEffect(() => {
+        const handler = () => {
+            cargarDatosDashboard();  // 🔄 refrescar dashboard
+        };
+
+        window.addEventListener("alquilerCreado", handler);
+
+        return () => {
+            window.removeEventListener("alquilerCreado", handler);
+        };
+    }, []);
+
     const cargarDatosDashboard = async () => {
         try {
             // 1. Obtener datos en paralelo
