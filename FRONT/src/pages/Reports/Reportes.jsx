@@ -97,6 +97,25 @@ const Reportes = () => {
         }
     };
 
+    // --- HELPERS DE FORMATO (Para que se vea lindo) ---
+    
+    // Formato de moneda para Tooltips y Tablas ($ 1.500.000)
+    const formatCurrency = (value) => {
+        return new Intl.NumberFormat('es-AR', { 
+            style: 'currency', 
+            currency: 'ARS', 
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0 
+        }).format(value);
+    };
+
+    // Formato resumido para el Eje Y (1M, 500k, etc)
+    const formatYAxis = (value) => {
+        if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+        if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
+        return value;
+    };
+
     return (
         <div className="space-y-10 pb-10">
             <h1 className="text-3xl font-bold text-gray-800">Tablero de Reportes</h1>
@@ -134,25 +153,43 @@ const Reportes = () => {
                 <div className="bg-white p-6 rounded-xl shadow border border-gray-200">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-semibold">Facturación Mensual</h3>
-                        <input 
-                            type="number" 
-                            value={anioFacturacion} 
-                            onChange={(e) => {
-                                setAnioFacturacion(e.target.value);
-                                cargarFacturacion(e.target.value);
-                            }}
-                            className="border rounded p-1 w-20 text-center"
-                        />
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">Año:</span>
+                            <input 
+                                type="number" 
+                                value={anioFacturacion} 
+                                onChange={(e) => {
+                                    setAnioFacturacion(e.target.value);
+                                    cargarFacturacion(e.target.value);
+                                }}
+                                className="border rounded p-1 w-20 text-center font-medium text-gray-700"
+                            />
+                        </div>
                     </div>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={facturacionData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="MES_NOMBRE" />
-                                <YAxis />
-                                <Tooltip formatter={(value) => `$${value}`} />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="MES_NOMBRE" axisLine={false} tickLine={false} />
+                                {/* Usamos el formateador resumido para el eje Y */}
+                                <YAxis 
+                                    axisLine={false} 
+                                    tickLine={false} 
+                                    tickFormatter={formatYAxis} 
+                                />
+                                {/* Usamos el formateador de moneda completo para el tooltip */}
+                                <Tooltip 
+                                    formatter={(value) => [formatCurrency(value), "Facturado"]}
+                                    cursor={{fill: '#f3f4f6'}}
+                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                />
                                 <Legend />
-                                <Bar dataKey="TOTAL" fill="#148bc3ff" name="Facturado" />
+                                <Bar 
+                                    dataKey="TOTAL" 
+                                    fill="#0ea5e9" 
+                                    name="Total Facturado" 
+                                    radius={[4, 4, 0, 0]} 
+                                />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -165,20 +202,20 @@ const Reportes = () => {
                 
                 <form onSubmit={cargarGraficoLineas} className="flex gap-4 mb-6 items-end">
                     <div>
-                        <label className="block text-xs text-gray-500">Desde</label>
-                        <input type="date" className="border p-2 rounded" 
+                        <label className="block text-xs text-gray-500 font-medium mb-1">Desde</label>
+                        <input type="date" className="border p-2 rounded text-sm" 
                             value={periodoFechas.desde}
                             onChange={e => setPeriodoFechas({...periodoFechas, desde: e.target.value})} 
                         />
                     </div>
                     <div>
-                        <label className="block text-xs text-gray-500">Hasta</label>
-                        <input type="date" className="border p-2 rounded" 
+                        <label className="block text-xs text-gray-500 font-medium mb-1">Hasta</label>
+                        <input type="date" className="border p-2 rounded text-sm" 
                             value={periodoFechas.hasta}
                             onChange={e => setPeriodoFechas({...periodoFechas, hasta: e.target.value})} 
                         />
                     </div>
-                    <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
                         Actualizar Gráfico
                     </button>
                 </form>
@@ -186,12 +223,22 @@ const Reportes = () => {
                 <div className="h-72">
                     <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={lineasData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="fecha" />
-                            <YAxis allowDecimals={false} />
-                            <Tooltip />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                            <XAxis dataKey="fecha" axisLine={false} tickLine={false} />
+                            <YAxis allowDecimals={false} axisLine={false} tickLine={false} />
+                            <Tooltip 
+                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                            />
                             <Legend />
-                            <Line type="monotone" dataKey="cantidad" stroke="#04a542ff" name="Cantidad de Alquileres" strokeWidth={2} />
+                            <Line 
+                                type="monotone" 
+                                dataKey="cantidad" 
+                                stroke="#10b981" 
+                                name="Cantidad de Alquileres" 
+                                strokeWidth={3} 
+                                dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }}
+                                activeDot={{ r: 6 }}
+                            />
                         </LineChart>
                     </ResponsiveContainer>
                 </div>
@@ -203,7 +250,7 @@ const Reportes = () => {
                 
                 <div className="mb-4 w-full max-w-md">
                     <select 
-                        className="w-full border p-2 rounded" 
+                        className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" 
                         value={selectedCliente} 
                         onChange={handleClienteChange}
                     >
@@ -215,38 +262,40 @@ const Reportes = () => {
                 </div>
 
                 {clienteReporte.length > 0 ? (
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto rounded-lg border border-gray-200">
                         <table className="min-w-full divide-y divide-gray-200 text-sm">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-4 py-2 text-left">Fecha Inicio</th>
-                                    <th className="px-4 py-2 text-left">Vehículo</th>
-                                    <th className="px-4 py-2 text-left">Estado</th>
-                                    <th className="px-4 py-2 text-left">Costo</th>
+                                    <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Fecha Inicio</th>
+                                    <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Vehículo</th>
+                                    <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                    <th className="px-4 py-3 text-right font-medium text-gray-500 uppercase tracking-wider">Costo Total</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200">
+                            <tbody className="bg-white divide-y divide-gray-200">
                                 {clienteReporte.map((item, idx) => (
-                                    <tr key={idx}>
-                                        <td className="px-4 py-2">{item.FEC_INICIO}</td>
-                                        <td className="px-4 py-2">{item.PATENTE} - {item.MODELO}</td>
-                                        <td className="px-4 py-2">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-bold 
+                                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-4 py-3 whitespace-nowrap text-gray-700">{item.FEC_INICIO}</td>
+                                        <td className="px-4 py-3 whitespace-nowrap font-medium text-gray-900">{item.PATENTE} - {item.MODELO}</td>
+                                        <td className="px-4 py-3 whitespace-nowrap">
+                                            <span className={`px-2 py-1 rounded-full text-xs font-bold inline-flex items-center
                                                 ${item.ESTADO === 'Finalizado' ? 'bg-green-100 text-green-800' : 
-                                                    item.ESTADO === 'En curso' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100'}`}>
+                                                    item.ESTADO === 'En curso' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
                                                 {item.ESTADO}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-2 font-semibold">${item.COSTO_TOTAL}</td>
+                                        <td className="px-4 py-3 whitespace-nowrap text-right font-bold text-gray-900">
+                                            {formatCurrency(item.COSTO_TOTAL)}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
                     </div>
                 ) : (
-                    <p className="text-gray-500 text-center py-4">
-                        {selectedCliente ? "Este cliente no tiene alquileres registrados." : "Seleccione un cliente."}
-                    </p>
+                    <div className="text-gray-500 text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                        {selectedCliente ? "Este cliente no tiene alquileres registrados." : "Seleccione un cliente de la lista para ver su historial."}
+                    </div>
                 )}
             </div>
         </div>
