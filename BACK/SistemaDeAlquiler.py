@@ -19,7 +19,7 @@ class SistemaDeAlquiler:
         self.caracteristica_vehiculo_manager = CaracteristicaVehiculoManager.CaracteristicaVehiculoManager()
 
     ## ---------------------------------------------
-    ## ABM DE CLIENTES (Ejemplo de delegación pura)
+    ## ABM DE CLIENTES Y EMPLEADOS (Ejemplo de delegación pura)
     ## ---------------------------------------------
 
     def crear_cliente(self, nombre, dni, telefono, mail):
@@ -27,12 +27,24 @@ class SistemaDeAlquiler:
         cliente = Cliente.Cliente(nombre=nombre, dni=dni, telefono=telefono, mail=mail)
         # Aquí iría LÓGICA DE NEGOCIO (ej: validaciones complejas de DNI o reputación)
         return self.cliente_manager.guardar(cliente)
+    
+    def crear_empleado(self, nombre, dni, mail):
+        """Lógica de Alta: Crea el objeto y delega la persistencia."""
+        empleado = Empleado.Empleado(id_empleado=None, nombre=nombre, dni=dni, mail=mail)
+        # Aquí iría LÓGICA DE NEGOCIO (ej: validaciones complejas de DNI o reputación)
+        return self.empleado_manager.guardar(empleado)
 
     def obtener_cliente(self, id_cliente):
         return self.cliente_manager.obtener_por_id(id_cliente)
+    
+    def obtener_empleado(self, id_empleado):
+        return self.empleado_manager.obtener_por_id(id_empleado)
 
     def listar_clientes(self):
         return self.cliente_manager.listar_todos()
+    
+    def listar_empleados(self):
+        return self.empleado_manager.listar_todos()
 
     def modificar_cliente(self, id_cliente, data):
         """Lógica de Modificación: Obtener, modificar, delegar actualización."""
@@ -47,6 +59,25 @@ class SistemaDeAlquiler:
         cliente.mail = data.get('mail', cliente.mail)
         
         return self.cliente_manager.actualizar(cliente)
+    
+    def modificar_empleado(self, id_empleado, data):
+        """Lógica de Modificación: Obtener, modificar, delegar actualización."""
+        empleado = self.obtener_empleado(id_empleado)
+        if not empleado:
+            return None
+        
+        # Lógica de Negocio: Aplicar los cambios
+        empleado.nombre = data.get('nombre', empleado.nombre)
+        empleado.dni = data.get('dni', empleado.dni)
+        empleado.mail = data.get('mail', empleado.mail)
+        
+        return self.empleado_manager.actualizar(empleado)
+    
+
+    def eliminar_empleado(self, id_empleado):
+        """Lógica de Baja: Delega la eliminación al manager."""
+        # Aquí podrías agregar validaciones extra antes de eliminar
+        return self.empleado_manager.eliminar(id_empleado)
 
 
     ## ---------------------------------------------

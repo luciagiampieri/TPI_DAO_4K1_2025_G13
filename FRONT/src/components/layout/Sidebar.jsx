@@ -9,6 +9,7 @@ const Sidebar = () => {
     const menuItems = [
         { path: '/', name: 'Home', icon: HomeIcon },
         { path: '/clientes', name: 'Clientes', icon: UserGroupIcon },
+        { path: '/empleados', name: 'Empleados', icon: UserGroupIcon },
         { path: '/vehiculos', name: 'Vehículos', icon: TruckIcon },
         { path: '/alquileres', name: 'Alquileres', icon: ClipboardDocumentListIcon },
         { path: '/reportes', name: 'Reportes', icon: ChartBarIcon },
