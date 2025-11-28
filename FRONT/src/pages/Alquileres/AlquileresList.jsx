@@ -64,6 +64,12 @@ const AlquileresList = () => {
         loadData();
     }, []);
 
+    const getMinDateTime = () => {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Ajuste de zona horaria local
+        return now.toISOString().slice(0, 16); // Formato: "YYYY-MM-DDTHH:mm"
+    };
+
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -254,7 +260,7 @@ const AlquileresList = () => {
                             {alquileresFiltrados.length > 0 ? (
                                 alquileresFiltrados.map((a) => {
                                     const estadoUpper = a.estado.toUpperCase();
-                                    const esActivo = estadoUpper.includes('CURSO') || estadoUpper.includes('RESERVADO');
+                                    const esActivo = estadoUpper.includes('CURSO') || estadoUpper.includes('PENDIENTE DE INICIO');
                                     const esEnCurso = estadoUpper.includes('CURSO');
 
                                     return (
@@ -341,7 +347,6 @@ const AlquileresList = () => {
                                     <select name="vehiculoId" value={formData.vehiculoId} onChange={handleInputChange} required className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2 border">
                                         <option value="">Seleccione...</option>
                                         {vehiculos
-                                            .filter(v => v.estado === 'Disponible' || v.estado === 'DISPONIBLE' || v.id === formData.vehiculoId)
                                             .map(v => (
                                                 <option key={v.id} value={v.id}>{v.patente} - {v.modelo}</option>
                                             ))}
@@ -351,12 +356,28 @@ const AlquileresList = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Fecha Inicio</label>
-                                    <input type="datetime-local" name="fechaInicio" value={formData.fechaInicio} onChange={handleInputChange} required className="w-full border-gray-300 rounded-lg shadow-sm p-2 border" />
+                                    <label className="block text-sm font-medium text-gray-700">Fecha Inicio</label>
+                                    <input 
+                                        type="datetime-local" 
+                                        name="fechaInicio" 
+                                        value={formData.fechaInicio} 
+                                        onChange={handleInputChange} 
+                                        min={getMinDateTime()}
+                                        required 
+                                        className="mt-1 block w-full p-2 border border-gray-300 rounded-md" 
+                                    />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Fecha Fin (Estimada)</label>
-                                    <input type="datetime-local" name="fechaFin" value={formData.fechaFin} onChange={handleInputChange} required className="w-full border-gray-300 rounded-lg shadow-sm p-2 border" />
+                                    <label className="block text-sm font-medium text-gray-700">Fecha Fin</label>
+                                    <input 
+                                        type="datetime-local" 
+                                        name="fechaFin" 
+                                        value={formData.fechaFin} 
+                                        onChange={handleInputChange} 
+                                        min={formData.fechaInicio || getMinDateTime()} 
+                                        required 
+                                        className="mt-1 block w-full p-2 border border-gray-300 rounded-md" 
+                                    />
                                 </div>
                             </div>
 

@@ -20,11 +20,8 @@ class VehiculoManager:
         if row is None:
             return None
         
-        print("Row en VehiculoManager:", row)
-
         estado_obj = self.estado_manager.obtener_por_id(row["ID_ESTADO"])
 
-        print("Estado obtenido:", estado_obj)
         caracteristica_obj = self.caracteristica_manager.obtener_por_id(row["ID_DETALLE_VEHICULO"])
 
         return Vehiculo(

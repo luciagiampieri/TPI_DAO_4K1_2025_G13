@@ -1,4 +1,5 @@
 from .Estado import Estado
+from .Ambito import Ambito
 from .Vehiculo import Vehiculo
 
 class Alquiler:
@@ -28,10 +29,8 @@ class Alquiler:
         from datetime import datetime
         self.fecha_fin = datetime.now()
         self.calcular_costo()
-        self.estado = Estado(8, "Finalizado")  # Asumiendo 8 es el ID para 'Finalizado'
-        # TODO pasar esto a patron state 
-
-        # Actualizar el kilometraje del vehículo
+        ambito = Ambito(2,'Alquiler')
+        self.estado = Estado(8, ambito,"Finalizado")
         self.vehiculo.setKilometraje(km_final)
 
     

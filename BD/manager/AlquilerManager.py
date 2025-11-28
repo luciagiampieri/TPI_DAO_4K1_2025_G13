@@ -212,8 +212,6 @@ class AlquilerManager:
             cursor.close()
             conn.close()
 
-
-
     def finalizar_con_kilometraje(self, alquiler):
         """
         Actualiza el alquiler (fin, costo, estado) y el kilometraje/estado del vehículo
@@ -243,7 +241,6 @@ class AlquilerManager:
                 alquiler.id_alquiler
             ))
 
-            # 2. Actualizar VEHICULO (Kilometraje y Estado a Disponible=1)
             ESTADO_DISPONIBLE = 1
             
             cursor.execute("""
@@ -303,34 +300,41 @@ class AlquilerManager:
             cursor.close()
             conn.close()
 
-
     def verificar_disponibilidad_sp(self, id_vehiculo, fecha_inicio, fecha_fin):
         """
-        Llama al SP_VALIDAR_DISPONIBILIDAD_ALQUILER.
-        Retorna True si está DISPONIBLE (el SP no devuelve nada).
-        Retorna False si está OCUPADO (el SP devuelve 1).
+        Llama al SP. 
+        - Si no pasa nada: Retorna True (Disponible).
+        - Si el SP lanza SIGNAL 45000: Retorna False (No disponible).
         """
         conn = self.db_connection.get_connection()
         cursor = conn.cursor()
 
         try:
-            # Formateamos las fechas a string YYYY-MM-DD para evitar problemas con MySQL
-            f_inicio_str = fecha_inicio.strftime('%Y-%m-%d %H:%M:%S')
-            f_fin_str = fecha_fin.strftime('%Y-%m-%d %H:%M:%S')
-
-            cursor.callproc('SP_VALIDAR_DISPONIBILIDAD_ALQUILER', (id_vehiculo, f_inicio_str, f_fin_str))
+            # 1. Llamar al SP con los 3 parámetros
+            cursor.callproc('SP_VALIDAR_DISPONIBILIDAD_ALQUILER', (
+                id_vehiculo, 
+                fecha_inicio, 
+                fecha_fin
+            ))
             
-            row = cursor.fetchone()
-
-            if row:
-                return False 
-
             return True
 
-        except pymysql.MySQLError as e:
-            print(f"Error al ejecutar SP de validación: {e}")
+        except pymysql.err.OperationalError as e:
+            # El código 1644 es el genérico para "User defined signal" en MySQL
+            code, message = e.args
+            
+            if code == 1644 and 'CONFLICTO_FECHAS' in message:
+                print(f"⚠️ Validación falló: {message}")
+                return False
+            
+            # Si es otro error (conexión, sintaxis, etc), lo dejamos subir o lo imprimimos
+            print(f"❌ Error inesperado de BD: {e}")
             return False
-
+            
+        except Exception as e:
+            print(f"❌ Error general: {e}")
+            return False
+            
         finally:
             cursor.close()
             conn.close()
