@@ -9,6 +9,7 @@ const Sidebar = () => {
     const menuItems = [
         { path: '/', name: 'Home', icon: HomeIcon },
         { path: '/clientes', name: 'Clientes', icon: UserGroupIcon },
+        { path: '/empleados', name: 'Empleados', icon: UserGroupIcon },
         { path: '/vehiculos', name: 'Vehículos', icon: TruckIcon },
         { path: '/alquileres', name: 'Alquileres', icon: ClipboardDocumentListIcon },
         { path: '/reportes', name: 'Reportes', icon: ChartBarIcon },
@@ -18,7 +19,7 @@ const Sidebar = () => {
         <div className="bg-slate-900 text-white w-64 min-h-screen flex flex-col transition-all duration-300">
             {/* Logo / Título */}
             <div className="h-16 flex items-center justify-center border-b border-slate-700">
-                <img src="/logo.png" alt="Formula Car Logo" className="h-10 mr-2" />
+                <img src="/logoSinFondo.png" alt="Formula Car Logo" className="h-10 mr-2" />
                 <h1 className="text-2xl font-bold text-sky-500">Formula Car <span className="text-white">App</span></h1>
             </div>
 

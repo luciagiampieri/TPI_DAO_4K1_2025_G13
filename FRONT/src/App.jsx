@@ -3,6 +3,7 @@ import Layout from './components/layout/Layout';
 import Dashboard from './pages/Home/Dashboard';
 import React from 'react';
 import ClientesList from './pages/Clients/ClientesList';
+import EmpleadosList from './pages/Empleados/EmpleadosList';
 import VehiculosList from './pages/Vehiculos/VehiculosList';
 import AlquileresList from './pages/Alquileres/AlquileresList';
 import VehiculoDetalle from './pages/Vehiculos/VehiculoDetalle';
@@ -16,6 +17,7 @@ function App() {
                 <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/clientes" element={<ClientesList />} />
+                <Route path="/empleados" element={<EmpleadosList />} />
                 <Route path="/vehiculos" element={<VehiculosList />} />
                 <Route path="/vehiculos/:id" element={<VehiculoDetalle />} />
                 <Route path="/alquileres" element={<AlquileresList />} />

@@ -15,6 +15,7 @@ export const getEmpleados = async () => {
 
 export const crearAlquiler = async (alquilerData) => {
     const response = await axios.post(ALQUILERES_URL, alquilerData);
+    window.dispatchEvent(new Event("alquilerCreado"));
     return response.data;
 };
 

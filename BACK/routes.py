@@ -194,10 +194,64 @@ def actualizar_vehiculo(id_vehiculo):
 # --- RUTAS DE EMPLEADOS (Para el Dropdown) ---
 @app.route('/api/empleados', methods=['GET'])
 def listar_empleados():
-    empleados = sistema.empleado_manager.listar_todos()
+    """Endpoint para obtener la lista de empleados."""
+    empleados = sistema.listar_empleados()
     
-    data = [{'id': e.id_empleado, 'nombre': e.nombre} for e in empleados]
-    return jsonify(data)
+    # Se retornan todos los datos para la tabla de gestión
+    empleados_data = [{
+        'id': e.id_empleado, 
+        'nombre': e.nombre,
+        'dni': e.dni,
+        'mail': e.mail
+    } for e in empleados]
+    
+    return jsonify(empleados_data)
+
+@app.route('/api/empleados', methods=['POST'])
+def alta_empleado():
+    """Endpoint para dar de alta un nuevo empleado."""
+    data = request.get_json()
+    
+    empleado = sistema.crear_empleado(
+        data['nombre'], data['dni'], data.get('mail')
+    )
+        
+    if empleado:
+        return jsonify({
+            "id": empleado.id_empleado, 
+            "nombre": empleado.nombre
+        }), 201 # 201 Created
+    
+    return jsonify({"error": "No se pudo crear el empleado."}), 400
+
+@app.route('/api/empleados/<int:id_empleado>', methods=['PUT'])
+def actualizar_empleado(id_empleado):
+    """Endpoint para modificar un empleado existente."""
+    data = request.get_json()
+
+    empleado = sistema.modificar_empleado(id_empleado, data)
+
+    if empleado:
+        return jsonify({
+            "id": id_empleado,
+            "nombre": data.get("nombre"),
+            "dni": data.get("dni"),
+            "mail": data.get("mail")
+        }), 200
+
+    return jsonify({"error": "No se pudo actualizar el empleado."}), 400
+
+@app.route('/api/empleados/<int:id_empleado>', methods=['DELETE'])
+def eliminar_empleado(id_empleado):
+    """Endpoint para eliminar un empleado."""
+    # Nota: Asegurarse de que no tenga Alquileres asociados en la BD o fallará por FK
+    exito = sistema.eliminar_empleado(id_empleado)
+    
+    if exito:
+        return jsonify({"mensaje": "Empleado eliminado correctamente."}), 200
+    
+    return jsonify({"error": "No se pudo eliminar el empleado."}), 400
+
 
 # --- RUTAS DE ALQUILERES ---
 @app.route('/api/alquileres', methods=['GET'])
@@ -343,7 +397,7 @@ def crear_mantenimiento():
         f_inicio = datetime.strptime(data['fecha_inicio'], '%Y-%m-%d')
         f_fin = None
         if data.get('fecha_fin') and data['fecha_fin'].strip():
-             f_fin = datetime.strptime(data['fecha_fin'], '%Y-%m-%d')
+            f_fin = datetime.strptime(data['fecha_fin'], '%Y-%m-%d')
 
         costo_str = data.get('costo', '')
         costo = float(costo_str) if costo_str and costo_str.strip() else 0.0
@@ -389,7 +443,7 @@ def modificar_mantenimiento(id_mantenimiento):
         
         f_fin = None
         if data.get('fecha_fin') and data['fecha_fin'].strip():
-             f_fin = datetime.strptime(data['fecha_fin'], '%Y-%m-%d')
+            f_fin = datetime.strptime(data['fecha_fin'], '%Y-%m-%d')
 
         costo_str = str(data.get('costo', '')) # Aseguramos que sea string antes de limpiar
         costo = float(costo_str) if costo_str.strip() else 0.0
