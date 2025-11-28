@@ -262,8 +262,11 @@ def listar_alquileres():
     data = [{
         'id': a.id_alquiler,
         'vehiculo': a.vehiculo.patente + ' - ' + a.vehiculo.caracteristica_vehiculo.modelo,
+        'vehiculo_id': a.vehiculo.id_vehiculo, # <--- Nuevo
         'cliente': a.cliente.nombre,
+        'cliente_id': a.cliente.id_cliente,    # <--- Nuevo
         'empleado': a.empleado.nombre,
+        'empleado_id': a.empleado.id_empleado, # <--- Nuevo
         'fecha_inicio': a.fecha_inicio.strftime('%Y-%m-%d %H:%M'),
         'fecha_fin': a.fecha_fin.strftime('%Y-%m-%d %H:%M'),
         'costo_total': a.costo_total,
@@ -300,33 +303,50 @@ def crear_alquiler():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-#eliminar alquiler
-@app.route('/api/alquileres/<int:id_alquiler>', methods=['DELETE'])
-def eliminar_alquiler(id_alquiler):
-    exito = sistema.eliminar_alquiler(id_alquiler)
+#Cancelar el alquiler
+@app.route('/api/alquileres/cancelar/<int:id_alquiler>', methods=['PUT'])
+def cancelar_alquiler(id_alquiler):
+    exito = sistema.cancelar_alquiler(id_alquiler)
     
     if exito:
-        return jsonify({"mensaje": "Alquiler eliminado correctamente."}), 200
+        return jsonify({"mensaje": "Alquiler cancelado correctamente."}), 200
     else:
-        return jsonify({"error": "No se pudo eliminar el alquiler."}), 400
+        return jsonify({"error": "No se pudo cancelar el alquiler."}), 400
     
 #modificar alquiler
+@app.route('/api/alquileres/<int:id_alquiler>', methods=['PUT'])
 @app.route('/api/alquileres/<int:id_alquiler>', methods=['PUT'])
 def modificar_alquiler(id_alquiler):
     data = request.get_json()
     
+    datos_a_modificar = {}
+
     try:
-        f_inicio = datetime.strptime(data['fechaInicio'], '%Y-%m-%dT%H:%M')
-        f_fin = datetime.strptime(data['fechaFin'], '%Y-%m-%dT%H:%M')
-        
-        alquiler_modificado = sistema.modificar_alquiler(
-            id_alquiler,
-            int(data['vehiculoId']),
-            int(data['clienteId']),
-            int(data['empleadoId']),
-            f_inicio,
-            f_fin
-        )
+        # Solo procesamos y agregamos al dict lo que venga en el JSON
+        if 'vehiculoId' in data:
+            datos_a_modificar['vehiculoId'] = data['vehiculoId']
+            
+        if 'clienteId' in data:
+            datos_a_modificar['clienteId'] = data['clienteId']
+            
+        if 'empleadoId' in data:
+            datos_a_modificar['empleadoId'] = data['empleadoId']
+
+        # Manejo de fechas (parseo seguro)
+        if 'fechaInicio' in data and data['fechaInicio']:
+            # El input datetime-local manda 'YYYY-MM-DDTHH:MM'
+            clean_date = data['fechaInicio'].replace('T', ' ') 
+            # Si le falta los segundos, se los agregamos o parseamos flexible
+            if len(clean_date) == 16: clean_date += ':00' 
+            datos_a_modificar['fechaInicio'] = datetime.strptime(clean_date, '%Y-%m-%d %H:%M:%S')
+
+        if 'fechaFin' in data and data['fechaFin']:
+            clean_date = data['fechaFin'].replace('T', ' ')
+            if len(clean_date) == 16: clean_date += ':00'
+            datos_a_modificar['fechaFin'] = datetime.strptime(clean_date, '%Y-%m-%d %H:%M:%S')
+
+        # Llamamos al sistema con el dict limpio
+        alquiler_modificado = sistema.modificar_alquiler(id_alquiler, datos_a_modificar)
         
         if alquiler_modificado:
             return jsonify({"mensaje": "Alquiler modificado con éxito"}), 200
@@ -339,7 +359,7 @@ def modificar_alquiler(id_alquiler):
         return jsonify({"error": str(e)}), 500
     
 #finalizar alquiler
-@app.route('/api/alquileres/finalizar/<int:id_alquiler>', methods=['POST'])
+@app.route('/api/alquileres/finalizar/<int:id_alquiler>', methods=['PUT'])
 def finalizar_alquiler(id_alquiler):
     data = request.get_json()
     

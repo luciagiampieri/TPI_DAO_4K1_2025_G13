@@ -19,16 +19,23 @@ export const crearAlquiler = async (alquilerData) => {
     return response.data;
 };
 
-export const eliminarAlquiler = async (idAlquiler) => {
-    const response = await axios.delete(`${ALQUILERES_URL}/${idAlquiler}`);
-    if (response.status == 200 || response.status == 204){
-        return true;
-    }
-    throw new Error('Error al eliminar el alquiler');
+export const updateAlquiler = async (id, alquilerData) => {
+    const response = await axios.put(`${ALQUILERES_URL}/${id}`, alquilerData);
+    window.dispatchEvent(new Event("alquilerCreado"));
+    return response.data;
+};
+
+export const cancelarAlquiler = async (idAlquiler) => {
+    // Apunta a la nueva ruta corregida
+    const response = await axios.put(`${ALQUILERES_URL}/cancelar/${idAlquiler}`);
+    window.dispatchEvent(new Event("alquilerCreado"));
+    return response.data;
 };
 
 export const finalizarAlquiler = async (idAlquiler, kmFinal) => {
-    const response = await axios.put(`${ALQUILERES_URL}/finalizar/${idAlquiler}`, { km_final: kmFinal });
+    const response = await axios.put(`${ALQUILERES_URL}/finalizar/${idAlquiler}`, { 
+        kilometrajeFinal: kmFinal 
+    });
     if (response.status === 200) {
         return true;
     }

@@ -163,16 +163,74 @@ class SistemaDeAlquiler:
             return alquiler_persistido
             
         return None
+
+
+    def modificar_alquiler(self, id_alquiler, data):
+        """
+        Modifica un alquiler. Permite actualizaciones parciales (ej: solo cambiar vehículo).
+        """
+        # 1. Buscamos el alquiler original
+        alquiler = self.alquiler_manager.obtener_por_id(id_alquiler)
+        if not alquiler:
+            print(f"❌ Alquiler {id_alquiler} no encontrado.")
+            return None
+
+        recalcular_costo = False
+
+        # 2. Actualización de Relaciones (Foreign Keys)
+        # Solo buscamos el objeto en la BD si realmente vino el ID en 'data'
         
+        if 'vehiculoId' in data:
+            nuevo_vehiculo = self.vehiculo_manager.obtener_por_id(int(data['vehiculoId']))
+            if nuevo_vehiculo:
+                alquiler.vehiculo = nuevo_vehiculo
+                recalcular_costo = True # Cambiar el auto puede cambiar el costo diario
+
+        if 'clienteId' in data:
+            nuevo_cliente = self.cliente_manager.obtener_por_id(int(data['clienteId']))
+            if nuevo_cliente:
+                alquiler.cliente = nuevo_cliente
+
+        if 'empleadoId' in data:
+            nuevo_empleado = self.empleado_manager.obtener_por_id(int(data['empleadoId']))
+            if nuevo_empleado:
+                alquiler.empleado = nuevo_empleado
+
+        # 3. Actualización de Fechas
+        if 'fechaInicio' in data and data['fechaInicio']:
+            # Asumimos que viene como datetime desde routes, o string si lo parseamos allá
+            alquiler.fecha_inicio = data['fechaInicio'] 
+            recalcular_costo = True
+
+        if 'fechaFin' in data and data['fechaFin']:
+            alquiler.fecha_fin = data['fechaFin']
+            recalcular_costo = True
+
+        # 4. Recalcular costo si cambiaron fechas o vehículo
+        if recalcular_costo:
+            alquiler.calcular_costo()
+
+        # 5. Guardar cambios
+        exito = self.alquiler_manager.actualizar(alquiler)
+        
+        if exito:
+            return alquiler
+        return None
+    
+
     def finalizar_alquiler(self, id_alquiler, km_final):
         """Proceso de finalización de un alquiler (Lógica de Negocio con transacción)."""
         alquiler = self.alquiler_manager.obtener_por_id(id_alquiler)
         
-        if not alquiler or alquiler.estado.id_estado != 201: # 201 = Activo
+        if not alquiler or alquiler.estado.id_estado != 6: # 6 = Pendiente de inicio
             return False
 
         alquiler.finalizar_alquiler(km_final) 
-        alquiler_actualizado = self.alquiler_manager.actualizar(alquiler)
+
+        # Forzamos el estado a FINALIZADO
+        alquiler.estado = self.estado_manager.obtener_por_id(7)
+
+        alquiler_actualizado = self.alquiler_manager.finalizar_con_kilometraje(alquiler)
 
         if alquiler_actualizado:
             self.vehiculo_manager.actualizar_estado(alquiler.vehiculo.id_vehiculo, 1) 
@@ -180,20 +238,28 @@ class SistemaDeAlquiler:
         return False
     
     # el eliminar pasa a ser cancelar, con el estado 5
-    def eliminar_alquiler(self, id_alquiler):
-        """Lógica de Eliminación de un Alquiler (si está en estado 'Activo')."""
+    def cancelar_alquiler(self, id_alquiler):
+        """Lógica de Cancelación de un Alquiler (si está en estado 'Activo')."""
         alquiler = self.alquiler_manager.obtener_por_id(id_alquiler)
         
         if not alquiler:
             print(f"❌ Alquiler {id_alquiler} no encontrado.")
             return False
         
-        if alquiler.estado.id_estado != 201: # 201 = Activo
-            print(f"❌ No se puede eliminar el alquiler {id_alquiler} porque no está activo.")
+        if alquiler.estado.id_estado not in [6, 7]: # 6 = Pendiente de inicio, 7 = En Curso
+            print(f"❌ No se puede cancelar el alquiler {id_alquiler} porque no está activo.")
             return False
         
-        # Delegar la eliminación al Manager
-        return self.alquiler_manager.eliminar(id_alquiler)
+        # Delegar la cancelación al Manager
+        exito = self.alquiler_manager.cancelar(alquiler)
+
+        if exito:
+            # IMPORTANTE: Liberar el vehículo asociado para que pueda volver a usarse
+            self.vehiculo_manager.actualizar_estado(alquiler.vehiculo.id_vehiculo, 1) # 1 = DISPONIBLE
+            return True
+            
+        return False
+    
 
 
     ## ---------------------------------------------

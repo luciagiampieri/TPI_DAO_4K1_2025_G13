@@ -193,7 +193,7 @@ const VehiculosList = () => {
         <div>
             {/* ENCABEZADO */}
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-3xl font-bold text-gray-800">ABM de Vehículos</h2>
+                <h2 className="text-3xl font-bold text-gray-800">Gestión de Vehículos</h2>
                 <button
                     onClick={() => setFormVisible(true)}
                     className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md"

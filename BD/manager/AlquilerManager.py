@@ -62,7 +62,7 @@ class AlquilerManager:
             cursor.execute("""
                 INSERT INTO ALQUILER 
                     (ID_VEHICULO, ID_EMPLEADO, ID_CLIENTE, 
-                     FEC_INICIO, FEC_FIN, COSTO_TOTAL, ID_ESTADO)
+                    FEC_INICIO, FEC_FIN, COSTO_TOTAL, ID_ESTADO)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (
                 alquiler.vehiculo.id_vehiculo,
@@ -212,6 +212,62 @@ class AlquilerManager:
             cursor.close()
             conn.close()
 
+
+
+    def finalizar_con_kilometraje(self, alquiler):
+        """
+        Actualiza el alquiler (fin, costo, estado) y el kilometraje/estado del vehículo
+        en una sola transacción atómica.
+        """
+        if not alquiler.id_alquiler or not alquiler.vehiculo.id_vehiculo:
+            return False
+
+        conn = self.db_connection.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            # Datos para el Alquiler
+            fec_fin_str = alquiler.fecha_fin.strftime('%Y-%m-%d %H:%M:%S')
+            
+            # 1. Actualizar ALQUILER
+            cursor.execute("""
+                UPDATE ALQUILER SET 
+                    FEC_FIN = %s,
+                    COSTO_TOTAL = %s,
+                    ID_ESTADO = %s
+                WHERE ID_ALQUILER = %s
+            """, (
+                fec_fin_str,
+                alquiler.costo_total,
+                alquiler.estado.id_estado,
+                alquiler.id_alquiler
+            ))
+
+            # 2. Actualizar VEHICULO (Kilometraje y Estado a Disponible=1)
+            ESTADO_DISPONIBLE = 1
+            
+            cursor.execute("""
+                UPDATE VEHICULO SET
+                    KILOMETRAJE = %s,
+                    ID_ESTADO = %s
+                WHERE ID_VEHICULO = %s
+            """, (
+                alquiler.vehiculo.kilometraje,
+                ESTADO_DISPONIBLE,
+                alquiler.vehiculo.id_vehiculo
+            ))
+
+            conn.commit()
+            return True
+
+        except pymysql.MySQLError as e:
+            print(f"Error al finalizar alquiler y actualizar vehículo: {e}")
+            conn.rollback()
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+
     # ----------------------------------------------------------
     #   LISTAR POR CLIENTE
     # ----------------------------------------------------------
@@ -247,23 +303,6 @@ class AlquilerManager:
             cursor.close()
             conn.close()
 
-
-    def eliminar(self, id_alquiler):
-        conn = self.db_connection.get_connection()
-        cursor = conn.cursor()
-
-        try:
-            cursor.execute("DELETE FROM ALQUILER WHERE ID_ALQUILER = %s", (id_alquiler,))
-            conn.commit()
-            return cursor.rowcount > 0
-
-        except pymysql.MySQLError as e:
-            print(f"Error al eliminar alquiler: {e}")
-            conn.rollback()
-            return False
-        finally:
-            cursor.close()
-            conn.close()
 
     def verificar_disponibilidad_sp(self, id_vehiculo, fecha_inicio, fecha_fin):
         """
